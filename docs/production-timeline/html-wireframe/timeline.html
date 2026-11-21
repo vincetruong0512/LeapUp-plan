@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>production-timeline — Follow and maintain the production timeline | Wireframe</title>
+  <style>
+    /* RESET */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f4;
+      color: #000;
+      padding: 32px 24px;
+    }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+
+    /* BREADCRUMB về cửa-vào TOC — chỉ hiện khi mở file flow TRỰC TIẾP, ẩn khi trong iframe của {feature}-wireframe.html */
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    /* HEADER */
+    .wf-header { margin-bottom: 28px; border-bottom: 2px solid #000; padding-bottom: 14px; background: #fff; padding: 16px 20px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+    .wf-flow-title { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #888; margin-top: 6px; }
+    .wf-flow-desc { font-size: 13px; color: #444; margin-top: 8px; line-height: 1.5; }
+
+    /* FLOW ROW — screens xếp ngang, TỰ WRAP theo bề rộng device (KHÔNG ép 3/row) */
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px 16px; }
+    .wf-row-divider { display: none; } /* không còn chia row cứng — wrap tự nhiên */
+
+    /* SCREEN WRAPPER — bề rộng = device thật, KHÔNG phải 33% trừu tượng.
+       data-device trên .wf-page quyết định: mobile 375 / tablet 768 / desktop 1440.
+       Frame giữ tỉ lệ thật của thiết bị → không còn "size sai / trông giả". */
+    .wf-screen { flex: 0 0 auto; }
+    .wf-page[data-device="mobile"]  .wf-screen { width: 375px; }
+    .wf-page[data-device="tablet"]  .wf-screen { width: 768px; }
+    .wf-page[data-device="desktop"] .wf-screen { width: 1024px; max-width: 100%; }
+    .wf-page:not([data-device]) .wf-screen { width: 375px; } /* fallback mobile-first */
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; }
+    .wf-step-badge {
+      font-size: 10px; font-weight: 700; color: #fff;
+      background: #000; border-radius: 50%;
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .wf-screen-label { text-align: center; font-size: 11px; color: #555; margin-top: 6px; }
+    .wf-shared-badge { font-size: 9px; color: #888; border: 1px solid #ccc; border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+    .wf-arrow { display: flex; align-items: center; padding-top: 48px; font-size: 22px; color: #000; flex-shrink: 0; }
+
+    /* SCREEN FRAME (device chrome) */
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; }
+    .wf-screen-bar { background: #f0f0f0; border-bottom: 1px solid #000; padding: 6px 10px; display: flex; align-items: center; gap: 5px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #888; background: #fff; flex-shrink: 0; }
+    .wf-bar-title { font-size: 11px; font-weight: 600; flex: 1; text-align: center; }
+    .wf-screen-content { padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+    /* FORM CONTAINER — form/auth/dialog KHÔNG trải rộng hết khung desktop.
+       Bọc nội dung form trong .wf-form (box căn giữa, hẹp) — input/nút full-width TRONG box này,
+       không phải full khung. Trên mobile 375 thì .wf-form ~= full width tự nhiên. */
+    .wf-form { width: 100%; max-width: 380px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .wf-form.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; background: #fff; } /* optional: viền box rõ */
+
+    /* APP BRAND */
+    .wf-app-brand { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #000; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+    .wf-screen-title { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+
+    /* FORM ELEMENTS */
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 11px; font-weight: 600; }
+    .field input[type=text], .field input[type=email], .field input[type=password] {
+      border: 1px solid #000; border-radius: 3px; padding: 7px 9px;
+      font-size: 12px; width: 100%; background: #fff; color: #000;
+    }
+    .field input::placeholder { color: #aaa; }
+    .input-pw { position: relative; }
+    .input-pw input { padding-right: 28px; width: 100%; border: 1px solid #000; border-radius: 3px; padding: 7px 9px; font-size: 12px; }
+    .input-pw .eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 13px; cursor: pointer; color: #555; }
+
+    /* CHECKBOX */
+    label.checkbox { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+    label.checkbox input { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* BUTTONS */
+    .btn-primary {
+      display: block; width: 100%;
+      padding: 9px 12px; background: #000; color: #fff;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .btn-secondary {
+      display: block; width: 100%;
+      padding: 9px 12px; background: #fff; color: #000;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 9px 12px; background: #fff; color: #000;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .g-icon { font-size: 14px; font-weight: 900; font-style: italic; }
+
+    /* LINK */
+    .wf-link { font-size: 12px; color: #000; text-decoration: underline; cursor: pointer; }
+    .links-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+
+    /* BANNERS / INFO */
+    .banner { font-size: 11px; padding: 8px 10px; border: 1px solid #000; border-radius: 4px; display: flex; gap: 6px; align-items: flex-start; line-height: 1.4; }
+    .banner-info { background: #f0f0f0; }
+    .banner-warn { background: #f0f0f0; }
+
+    /* LABELS / HINTS */
+    .info-label { font-size: 12px; color: #333; line-height: 1.5; text-align: center; }
+    .hint-text { font-size: 11px; color: #888; font-style: italic; }
+    .state-hint { font-size: 10px; color: #888; font-style: italic; margin-top: 2px; }
+
+    /* PASSWORD CHECKLIST */
+    .pw-check { display: flex; gap: 8px; flex-wrap: wrap; font-size: 10px; }
+    .pw-check .ok { color: #000; }
+    .pw-check .ok::before { content: "✓ "; }
+    .pw-check .fail { color: #888; }
+    .pw-check .fail::before { content: "✗ "; }
+
+    /* DIVIDER */
+    .divider { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #888; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #ccc; }
+
+    /* MODAL BOX */
+    .modal-box { border: 2px solid #000; border-radius: 6px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 10px; }
+    .modal-title { font-size: 12px; font-weight: 700; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+    .modal-desc { font-size: 11px; color: #444; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .modal-actions .btn-secondary, .modal-actions .btn-primary { flex: 1; font-size: 11px; padding: 7px 8px; }
+
+    /* ICON PLACEHOLDER */
+    .icon-lg { text-align: center; font-size: 28px; margin-bottom: 4px; }
+
+    /* BACK NAV */
+    .back-nav { font-size: 12px; color: #000; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 4px; }
+
+    /* CARD */
+    .wf-card { border: 1px solid #ccc; border-radius: 4px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+    .wf-card-body { flex: 1; }
+    .wf-card-title { font-size: 12px; font-weight: 700; }
+    .wf-card-sub { font-size: 11px; color: #555; }
+    .wf-card-action { flex-shrink: 0; }
+
+    /* CAPTCHA placeholder */
+    .captcha-box { border: 1px dashed #888; border-radius: 4px; padding: 8px; text-align: center; font-size: 10px; color: #888; background: #f8f8f8; }
+
+    /* FOOTER */
+    .wf-footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #ccc; font-size: 10px; color: #aaa; display: flex; justify-content: space-between; }
+
+    /* SCREEN DESCRIPTION TABLE (Phase F.5) */
+    .wf-desc-section { margin-top: 32px; }
+    .wf-desc-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #000; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; font-size: 11px; text-transform: uppercase; }
+    .wf-desc-table td:first-child, .wf-desc-table th:first-child { width: 36px; text-align: center; }
+    .wf-desc-table td:nth-child(2) { width: 150px; }  /* Items */
+    .wf-desc-table td:nth-child(3) { width: 110px; }  /* Control type */
+    .wf-desc-table td:nth-child(4) { width: 90px; }   /* Data type */
+    /* col 5 (Description) = phần còn lại */
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; font-size: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+<div class="wf-breadcrumb"><a href="production-timeline-wireframe.html">← Wireframe index (all flows)</a></div>
+<div class="wf-page" data-device="desktop">
+
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: production-timeline / Wireframe</div>
+    <div class="wf-flow-title">Follow and maintain the production timeline</div>
+    <div class="wf-flow-meta">2 screens · Device: desktop · Generated: 2026-11-22 · Source: srs/production-timeline-userflow.md + spec + Miro board</div>
+    <div class="wf-flow-desc">Proposal / Production Timeline as drawn on Miro board 04.</div>
+  </div>
+
+  <div class="wf-rows">
+    
+  <div class="wf-screen" id="s1">
+    <div class="wf-step-badge">1</div>
+    <div class="wf-device-tag">desktop · 1024px · board 04 (L197–L350)</div>
+    <div class="wf-screen-frame">
+      <div class="wf-screen-bar"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><span class="wf-bar-title">Proposal / Production Timeline</span></div>
+      <div class="wf-screen-content" style="padding:0"><div style="display:flex;min-height:560px"><div style="width:140px;flex-shrink:0;border-right:1px solid #000;padding:8px;display:flex;flex-direction:column;gap:4px;background:#f0f0f0"><div style="border:1px dashed #888;font-size:10px;color:#888;text-align:center;padding:6px">[Leap Up logo — image]</div><div style="font-size:12px;padding:4px 6px;">Dashboard</div><div style="font-size:12px;padding:4px 6px;background:#000;color:#fff;font-weight:700">Projects</div><div style="font-size:12px;padding:4px 6px;">Files</div><div style="font-size:12px;padding:4px 6px;">711 · PROJECT</div></div><div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0"><div style="font-size:10px;color:#888">Projects / 711 / Proposal / Timeline</div><div style="font-size:16px;font-weight:700">Proposal / Production Timeline</div><p class="info-label" style="text-align:left;">711 | Social Campaign Film 30s | Due 15 Dec 2026</p><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">PRODUCTION STAGES</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;background:#000;color:#fff"><div style="font-size:9px;letter-spacing:.5px">01 DONE</div><b>Brief &amp; Inputs</b><div>03–07 Nov</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;border:2px solid #000;background:#f0f0f0"><div style="font-size:9px;letter-spacing:.5px">02 CLIENT REVIEW</div><b>Script &amp; Storyboard</b><div>10–21 Nov</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;"><div style="font-size:9px;letter-spacing:.5px">03 UP NEXT</div><b>AI Generation</b><div>24 Nov–03 Dec</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;color:#888"><div style="font-size:9px;letter-spacing:.5px">04 NOT STARTED</div><b>Edit &amp; Post</b><div>04–10 Dec</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;color:#888"><div style="font-size:9px;letter-spacing:.5px">05 NOT STARTED</div><b>Delivery</b><div>11–15 Dec</div></div></div></div></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;flex:3"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">Milestones</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">MILESTONE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">OWNER</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">DUE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">STATUS</th></tr></thead><tbody><tr><td style="border:1px solid #ccc;padding:4px 6px">Brief sign-off</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">07 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Done</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Script V2 approval</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">19 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Waiting</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Storyboard approval</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">21 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Pending</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Character &amp; key visual lock</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">25 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Video Round 1</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">03 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Client feedback R1</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">05 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Video Round 2</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">09 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Final sign-off</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">12 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Delivery</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">15 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr></tbody></table></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;flex:2"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">Client Inputs</div><div style="font-size:10px;color:#888;letter-spacing:.5px">OPEN C6 — on board, not in quote</div>
+    <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Brand guideline</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Logo files</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Product packshots</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Key message &amp; copy</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Missing</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Legal disclaimer</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Missing</span></div>
+    <button class="btn-primary" style="width:100%;display:inline-block">Upload inputs</button></div><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">FEEDBACK RULE</div><div style="font-size:10px;color:#888;letter-spacing:.5px">OPEN C6</div><p class="info-label" style="text-align:left;">Consolidated feedback within</p><p class="info-label" style="text-align:left;">2 working days per round.</p><p class="info-label" style="text-align:left;">Late feedback shifts delivery.</p><p class="info-label" style="text-align:left;font-weight:700">Final approver: Client</p></div></div></div></div></div></div>
+    </div>
+    <div class="wf-screen-label">timeline</div>
+  </div>
+
+  <div class="wf-screen" id="s2">
+    <div class="wf-step-badge">2</div>
+    <div class="wf-device-tag">desktop · 1024px · not on board</div>
+    <div class="wf-screen-frame">
+      <div class="wf-screen-bar"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><span class="wf-bar-title">Upload inputs — error</span></div>
+      <div class="wf-screen-content" style="padding:0"><div style="display:flex;min-height:560px"><div style="width:140px;flex-shrink:0;border-right:1px solid #000;padding:8px;display:flex;flex-direction:column;gap:4px;background:#f0f0f0"><div style="border:1px dashed #888;font-size:10px;color:#888;text-align:center;padding:6px">[Leap Up logo — image]</div><div style="font-size:12px;padding:4px 6px;">Dashboard</div><div style="font-size:12px;padding:4px 6px;background:#000;color:#fff;font-weight:700">Projects</div><div style="font-size:12px;padding:4px 6px;">Files</div><div style="font-size:12px;padding:4px 6px;">711 · PROJECT</div></div><div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0"><div style="font-size:10px;color:#888">Projects / 711 / Proposal / Timeline</div><div style="font-size:16px;font-weight:700">Proposal / Production Timeline</div><p class="info-label" style="text-align:left;">711 | Social Campaign Film 30s | Due 15 Dec 2026</p><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">PRODUCTION STAGES</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;background:#000;color:#fff"><div style="font-size:9px;letter-spacing:.5px">01 DONE</div><b>Brief &amp; Inputs</b><div>03–07 Nov</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;border:2px solid #000;background:#f0f0f0"><div style="font-size:9px;letter-spacing:.5px">02 CLIENT REVIEW</div><b>Script &amp; Storyboard</b><div>10–21 Nov</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;"><div style="font-size:9px;letter-spacing:.5px">03 UP NEXT</div><b>AI Generation</b><div>24 Nov–03 Dec</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;color:#888"><div style="font-size:9px;letter-spacing:.5px">04 NOT STARTED</div><b>Edit &amp; Post</b><div>04–10 Dec</div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #000;border-radius:6px;padding:8px;font-size:11px;color:#888"><div style="font-size:9px;letter-spacing:.5px">05 NOT STARTED</div><b>Delivery</b><div>11–15 Dec</div></div></div></div></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;flex:3"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">Milestones</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">MILESTONE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">OWNER</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">DUE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">STATUS</th></tr></thead><tbody><tr><td style="border:1px solid #ccc;padding:4px 6px">Brief sign-off</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">07 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Done</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Script V2 approval</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">19 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Waiting</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Storyboard approval</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">21 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Pending</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Character &amp; key visual lock</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">25 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Video Round 1</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">03 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Client feedback R1</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">05 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Video Round 2</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">09 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Final sign-off</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">12 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Delivery</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">15 Dec</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Not started</span></td></tr></tbody></table></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;flex:2"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">Client Inputs</div><div style="font-size:10px;color:#888;letter-spacing:.5px">OPEN C6 — on board, not in quote</div>
+    <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Brand guideline</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Logo files</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Product packshots</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Received</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Key message &amp; copy</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Missing</span></div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><span style="font-size:11px;flex:1">Legal disclaimer</span><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Missing</span></div>
+    <button class="btn-primary" style="width:100%;display:inline-block">Upload inputs</button><div class="banner banner-warn">[Upload failed — E-production-timeline-002, wording TBD]</div></div><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">FEEDBACK RULE</div><div style="font-size:10px;color:#888;letter-spacing:.5px">OPEN C6</div><p class="info-label" style="text-align:left;">Consolidated feedback within</p><p class="info-label" style="text-align:left;">2 working days per round.</p><p class="info-label" style="text-align:left;">Late feedback shifts delivery.</p><p class="info-label" style="text-align:left;font-weight:700">Final approver: Client</p></div></div></div></div></div></div>
+    </div>
+    <div class="wf-screen-label">timeline-upload-error</div>
+  </div>
+  </div>
+
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Screen description</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr><th>#</th><th>Items</th><th>Control type</th><th>Data type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Proposal / Production Timeline</td></tr>
+<tr><td>1</td><td>Sidebar</td><td>Link</td><td>Click</td><td>Dashboard / Projects / Files / "711 · PROJECT" (L209–L239).</td></tr>
+<tr><td>2</td><td>Breadcrumb + title</td><td>Label</td><td>ReadOnly</td><td>"Projects / 711 / Proposal / Timeline", "Proposal / Production Timeline" (L197, L205). Entry point TBD (spec OQ-4).</td></tr>
+<tr><td>3</td><td>Project line</td><td>Label</td><td>ReadOnly</td><td>"711 | Social Campaign Film 30s | Due 15 Dec 2026" (L207).</td></tr>
+<tr><td>4</td><td>PRODUCTION STAGES</td><td>Label</td><td>ReadOnly</td><td>Five cards: "{nn} {STATUS}", stage name, date range (L216–L244; FR-production-timeline-002). Status DONE / CLIENT REVIEW / UP NEXT / NOT STARTED (FR-production-timeline-003). Fixed names TBD (spec OQ-1). Edit control not drawn — TBD (spec OQ-2).</td></tr>
+<tr><td>5</td><td>Milestones</td><td>Label</td><td>ReadOnly</td><td>MILESTONE / OWNER / DUE / STATUS (L256–L350; FR-production-timeline-004/005). Owner Client / Leap Up (BR-production-timeline-002). Status Done / Waiting / Pending / Not started — meanings TBD (spec OQ-3). None → E-production-timeline-001.</td></tr>
+<tr><td>6</td><td>Client Inputs (OPEN C6)</td><td>Label</td><td>ReadOnly</td><td>Items with Received / Missing (L255–L293; FR-production-timeline-007). In scope? TBD (spec OQ-5).</td></tr>
+<tr><td>7</td><td>Upload inputs (OPEN C6)</td><td>Browse button</td><td>Click</td><td>Client uploads a missing input (L299). Target folder, types/size TBD. Failure → E-production-timeline-002.</td></tr>
+<tr><td>8</td><td>FEEDBACK RULE (OPEN C6)</td><td>Label</td><td>ReadOnly</td><td>Static text from the board (L318–L346; FR-production-timeline-008). Static vs per-project TBD (spec OQ-6).</td></tr>
+<tr class="wf-desc-screen-header"><td colspan="5">Screen 2: Upload inputs — error</td></tr>
+<tr><td>1</td><td>Upload error</td><td>Label</td><td>ReadOnly</td><td>Upload of a client input failed (C6). E-production-timeline-002, wording TBD. Item stays Missing.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>production-timeline / timeline</span>
+    <span>Generated by /wireframe-html · 2026-11-22</span>
+  </div>
+
+</div>
+</body>
+</html>

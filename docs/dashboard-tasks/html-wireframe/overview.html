@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dashboard-tasks — Project overview and Action Required | Wireframe</title>
+  <style>
+    /* RESET */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f4;
+      color: #000;
+      padding: 32px 24px;
+    }
+    .wf-page { max-width: 1400px; margin: 0 auto; }
+
+    /* BREADCRUMB về cửa-vào TOC — chỉ hiện khi mở file flow TRỰC TIẾP, ẩn khi trong iframe của {feature}-wireframe.html */
+    .wf-breadcrumb { max-width: 1400px; margin: 0 auto 16px; }
+    .wf-breadcrumb a { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #000; text-decoration: none; border: 1px solid #000; border-radius: 4px; padding: 6px 12px; background: #fff; }
+    .wf-breadcrumb a:hover { background: #f0f0f0; }
+    html.in-iframe .wf-breadcrumb { display: none; }
+
+    /* HEADER */
+    .wf-header { margin-bottom: 28px; border-bottom: 2px solid #000; padding-bottom: 14px; background: #fff; padding: 16px 20px; }
+    .wf-feature-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+    .wf-flow-title { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .wf-flow-meta { font-size: 12px; color: #888; margin-top: 6px; }
+    .wf-flow-desc { font-size: 13px; color: #444; margin-top: 8px; line-height: 1.5; }
+
+    /* FLOW ROW — screens xếp ngang, TỰ WRAP theo bề rộng device (KHÔNG ép 3/row) */
+    .wf-rows { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px 16px; }
+    .wf-row-divider { display: none; } /* không còn chia row cứng — wrap tự nhiên */
+
+    /* SCREEN WRAPPER — bề rộng = device thật, KHÔNG phải 33% trừu tượng.
+       data-device trên .wf-page quyết định: mobile 375 / tablet 768 / desktop 1440.
+       Frame giữ tỉ lệ thật của thiết bị → không còn "size sai / trông giả". */
+    .wf-screen { flex: 0 0 auto; }
+    .wf-page[data-device="mobile"]  .wf-screen { width: 375px; }
+    .wf-page[data-device="tablet"]  .wf-screen { width: 768px; }
+    .wf-page[data-device="desktop"] .wf-screen { width: 1024px; max-width: 100%; }
+    .wf-page:not([data-device]) .wf-screen { width: 375px; } /* fallback mobile-first */
+    .wf-device-tag { display: inline-block; font-size: 10px; color: #555; border: 1px solid #ccc; border-radius: 3px; padding: 1px 6px; margin-bottom: 6px; }
+    .wf-step-badge {
+      font-size: 10px; font-weight: 700; color: #fff;
+      background: #000; border-radius: 50%;
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .wf-screen-label { text-align: center; font-size: 11px; color: #555; margin-top: 6px; }
+    .wf-shared-badge { font-size: 9px; color: #888; border: 1px solid #ccc; border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+    .wf-arrow { display: flex; align-items: center; padding-top: 48px; font-size: 22px; color: #000; flex-shrink: 0; }
+
+    /* SCREEN FRAME (device chrome) */
+    .wf-screen-frame { border: 2px solid #000; border-radius: 8px; overflow: hidden; background: #fff; }
+    .wf-screen-bar { background: #f0f0f0; border-bottom: 1px solid #000; padding: 6px 10px; display: flex; align-items: center; gap: 5px; }
+    .wf-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #888; background: #fff; flex-shrink: 0; }
+    .wf-bar-title { font-size: 11px; font-weight: 600; flex: 1; text-align: center; }
+    .wf-screen-content { padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+    /* FORM CONTAINER — form/auth/dialog KHÔNG trải rộng hết khung desktop.
+       Bọc nội dung form trong .wf-form (box căn giữa, hẹp) — input/nút full-width TRONG box này,
+       không phải full khung. Trên mobile 375 thì .wf-form ~= full width tự nhiên. */
+    .wf-form { width: 100%; max-width: 380px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .wf-form.card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; background: #fff; } /* optional: viền box rõ */
+
+    /* APP BRAND */
+    .wf-app-brand { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #000; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px; }
+    .wf-screen-title { font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+
+    /* FORM ELEMENTS */
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 11px; font-weight: 600; }
+    .field input[type=text], .field input[type=email], .field input[type=password] {
+      border: 1px solid #000; border-radius: 3px; padding: 7px 9px;
+      font-size: 12px; width: 100%; background: #fff; color: #000;
+    }
+    .field input::placeholder { color: #aaa; }
+    .input-pw { position: relative; }
+    .input-pw input { padding-right: 28px; width: 100%; border: 1px solid #000; border-radius: 3px; padding: 7px 9px; font-size: 12px; }
+    .input-pw .eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 13px; cursor: pointer; color: #555; }
+
+    /* CHECKBOX */
+    label.checkbox { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+    label.checkbox input { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* BUTTONS */
+    .btn-primary {
+      display: block; width: 100%;
+      padding: 9px 12px; background: #000; color: #fff;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .btn-secondary {
+      display: block; width: 100%;
+      padding: 9px 12px; background: #fff; color: #000;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 9px 12px; background: #fff; color: #000;
+      border: 2px solid #000; border-radius: 4px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .g-icon { font-size: 14px; font-weight: 900; font-style: italic; }
+
+    /* LINK */
+    .wf-link { font-size: 12px; color: #000; text-decoration: underline; cursor: pointer; }
+    .links-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+
+    /* BANNERS / INFO */
+    .banner { font-size: 11px; padding: 8px 10px; border: 1px solid #000; border-radius: 4px; display: flex; gap: 6px; align-items: flex-start; line-height: 1.4; }
+    .banner-info { background: #f0f0f0; }
+    .banner-warn { background: #f0f0f0; }
+
+    /* LABELS / HINTS */
+    .info-label { font-size: 12px; color: #333; line-height: 1.5; text-align: center; }
+    .hint-text { font-size: 11px; color: #888; font-style: italic; }
+    .state-hint { font-size: 10px; color: #888; font-style: italic; margin-top: 2px; }
+
+    /* PASSWORD CHECKLIST */
+    .pw-check { display: flex; gap: 8px; flex-wrap: wrap; font-size: 10px; }
+    .pw-check .ok { color: #000; }
+    .pw-check .ok::before { content: "✓ "; }
+    .pw-check .fail { color: #888; }
+    .pw-check .fail::before { content: "✗ "; }
+
+    /* DIVIDER */
+    .divider { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #888; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #ccc; }
+
+    /* MODAL BOX */
+    .modal-box { border: 2px solid #000; border-radius: 6px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 10px; }
+    .modal-title { font-size: 12px; font-weight: 700; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+    .modal-desc { font-size: 11px; color: #444; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .modal-actions .btn-secondary, .modal-actions .btn-primary { flex: 1; font-size: 11px; padding: 7px 8px; }
+
+    /* ICON PLACEHOLDER */
+    .icon-lg { text-align: center; font-size: 28px; margin-bottom: 4px; }
+
+    /* BACK NAV */
+    .back-nav { font-size: 12px; color: #000; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 4px; }
+
+    /* CARD */
+    .wf-card { border: 1px solid #ccc; border-radius: 4px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+    .wf-card-body { flex: 1; }
+    .wf-card-title { font-size: 12px; font-weight: 700; }
+    .wf-card-sub { font-size: 11px; color: #555; }
+    .wf-card-action { flex-shrink: 0; }
+
+    /* CAPTCHA placeholder */
+    .captcha-box { border: 1px dashed #888; border-radius: 4px; padding: 8px; text-align: center; font-size: 10px; color: #888; background: #f8f8f8; }
+
+    /* FOOTER */
+    .wf-footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #ccc; font-size: 10px; color: #aaa; display: flex; justify-content: space-between; }
+
+    /* SCREEN DESCRIPTION TABLE (Phase F.5) */
+    .wf-desc-section { margin-top: 32px; }
+    .wf-desc-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #000; }
+    .wf-desc-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; }
+    .wf-desc-table th, .wf-desc-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .wf-desc-table th { background: #f0f0f0; font-weight: 700; font-size: 11px; text-transform: uppercase; }
+    .wf-desc-table td:first-child, .wf-desc-table th:first-child { width: 36px; text-align: center; }
+    .wf-desc-table td:nth-child(2) { width: 150px; }  /* Items */
+    .wf-desc-table td:nth-child(3) { width: 110px; }  /* Control type */
+    .wf-desc-table td:nth-child(4) { width: 90px; }   /* Data type */
+    /* col 5 (Description) = phần còn lại */
+    .wf-desc-screen-header td { background: #000; color: #fff; font-weight: 700; font-size: 12px; }
+  </style>
+</head>
+<body>
+<script>if (window.self !== window.top) document.documentElement.classList.add('in-iframe');</script>
+<div class="wf-breadcrumb"><a href="dashboard-tasks-wireframe.html">← Wireframe index (all flows)</a></div>
+<div class="wf-page" data-device="desktop">
+
+  <div class="wf-header">
+    <div class="wf-feature-label">Feature: dashboard-tasks / Wireframe</div>
+    <div class="wf-flow-title">Project overview and Action Required</div>
+    <div class="wf-flow-meta">2 screens · Device: desktop · Generated: 2026-11-22 · Source: srs/dashboard-tasks-userflow.md + spec + Miro board</div>
+    <div class="wf-flow-desc">Home page as drawn on Miro board 02.</div>
+  </div>
+
+  <div class="wf-rows">
+    
+  <div class="wf-screen" id="s1">
+    <div class="wf-step-badge">1</div>
+    <div class="wf-device-tag">desktop · 1024px · board 02 (L8–L231)</div>
+    <div class="wf-screen-frame">
+      <div class="wf-screen-bar"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><span class="wf-bar-title">Home — Dashboard</span></div>
+      <div class="wf-screen-content" style="padding:0"><div style="padding:12px;border-bottom:1px solid #000;display:flex;align-items:center;gap:12px">
+    <div style="border:1px dashed #888;font-size:10px;color:#888;padding:6px">[Leap Up logo — image]</div>
+    <div style="font-weight:700;font-size:13px;flex:1">LEAP UP / CLIENT PROJECT PORTAL</div></div><div style="padding:0 12px"><div style="display:flex;gap:0;border-bottom:1px solid #000"><div style="font-size:12px;padding:5px 12px;border:1px solid #000;border-bottom:2px solid #fff;margin-bottom:-1px;font-weight:700">Dashboard</div><div style="font-size:12px;padding:5px 12px;color:#888">Project Management</div><div style="font-size:12px;padding:5px 12px;color:#888">Update Task List</div></div></div><div style="padding:12px;display:flex;gap:12px"><div style="flex:3;display:flex;flex-direction:column;gap:10px"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">01 Dashboard</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">02</div><p class="info-label" style="text-align:left;">Active Projects</p></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">07</div><p class="info-label" style="text-align:left;">Total Tasks</p></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">01</div><p class="info-label" style="text-align:left;">Completed Tasks</p></div></div></div><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">02 Project Management</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><b style="font-size:12px">Grab Transport</b><p class="info-label" style="text-align:left;">Deadline: 30 Nov 2026</p><p class="info-label" style="text-align:left;">Progress: 25%</p><div style="height:6px;background:#ccc"><div style="height:6px;width:25%;background:#000"></div></div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><b style="font-size:12px">7-Eleven Campaign</b><p class="info-label" style="text-align:left;">Deadline: 15 Dec 2026</p><p class="info-label" style="text-align:left;">Progress: 0%</p><div style="height:6px;background:#ccc"><div style="height:6px;width:0%;background:#000"></div></div></div></div></div><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;border:2px solid #000"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">03 Update Task List / By Project</div>
+    <b style="font-size:12px">Grab Transport</b><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">TASK</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">OWNER</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">DUE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">STATUS</th></tr></thead><tbody><tr><td style="border:1px solid #ccc;padding:4px 6px">Creative Concept Development</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">18 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">In Progress</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">KOL Shortlist Submission</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">19 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Completed</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Client Review &amp; Feedback</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">20 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Pending Review</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Production Timeline Approval</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">21 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">To Do</span></td></tr></tbody></table>
+    <b style="font-size:12px">7-Eleven Campaign</b><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">TASK</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">OWNER</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">DUE</th><th style="border:1px solid #000;background:#f0f0f0;padding:4px 6px;text-align:left">STATUS</th></tr></thead><tbody><tr><td style="border:1px solid #ccc;padding:4px 6px">Social Content Direction</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">19 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">In Progress</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Creative Key Visual</td><td style="border:1px solid #ccc;padding:4px 6px">Leap Up</td><td style="border:1px solid #ccc;padding:4px 6px">22 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">To Do</span></td></tr><tr><td style="border:1px solid #ccc;padding:4px 6px">Client Feedback Round 01</td><td style="border:1px solid #ccc;padding:4px 6px">Client</td><td style="border:1px solid #ccc;padding:4px 6px">24 Nov</td><td style="border:1px solid #ccc;padding:4px 6px"><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">Pending Review</span></td></tr></tbody></table>
+    <p class="hint-text">Board note (L199, OPEN C2): "Cần được update realtime task list mỗi ngày để Account update và client review to do". Add/edit task controls not drawn — TBD.</p></div></div><div style="flex:2"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">ACTION REQUIRED</div><span style="display:inline-block;border:1px solid #000;border-radius:10px;padding:1px 8px;font-size:10px;background:#f0f0f0">3 Pending Reviews</span><p class="info-label" style="text-align:left;color:#888">Items awaiting client review. Dates and tasks below are sample data.</p>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><b style="font-size:12px;flex:1">Video Round 2</b><button class="btn-primary" style="width:auto;display:inline-block">Review Now</button></div><p class="info-label" style="text-align:left;color:#888">711 · Outcome Development</p><p class="info-label" style="text-align:left;">3 timecoded comments to review</p><p class="info-label" style="text-align:left;color:#888">Due: 20 Nov 2026, 17:00</p></div>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><b style="font-size:12px;flex:1">Character Option A</b><button class="btn-primary" style="width:auto;display:inline-block">Review Now</button></div><p class="info-label" style="text-align:left;color:#888">711 · Material Library</p><p class="info-label" style="text-align:left;">Select visual direction and approve</p><p class="info-label" style="text-align:left;color:#888">Due: 21 Nov 2026, 17:00</p></div>
+    <p class="hint-text">Material Library is OUT of scope (quote §7) — sample item only.</p>
+    <div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;align-items:center"><b style="font-size:12px;flex:1">Creative Concept V1</b><button class="btn-primary" style="width:auto;display:inline-block">Review Now</button></div><p class="info-label" style="text-align:left;color:#888">Grab Transport · Project Detail</p><p class="info-label" style="text-align:left;">Review concept and share feedback</p><p class="info-label" style="text-align:left;color:#888">Due: 23 Nov 2026, 17:00</p></div></div></div></div></div>
+    </div>
+    <div class="wf-screen-label">home</div>
+  </div>
+
+  <div class="wf-screen" id="s2">
+    <div class="wf-step-badge">2</div>
+    <div class="wf-device-tag">desktop · 1024px · not on board</div>
+    <div class="wf-screen-frame">
+      <div class="wf-screen-bar"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><span class="wf-bar-title">Home — no action required</span></div>
+      <div class="wf-screen-content" style="padding:0"><div style="padding:12px;border-bottom:1px solid #000;display:flex;align-items:center;gap:12px">
+    <div style="border:1px dashed #888;font-size:10px;color:#888;padding:6px">[Leap Up logo — image]</div>
+    <div style="font-weight:700;font-size:13px;flex:1">LEAP UP / CLIENT PROJECT PORTAL</div></div><div style="padding:0 12px"><div style="display:flex;gap:0;border-bottom:1px solid #000"><div style="font-size:12px;padding:5px 12px;border:1px solid #000;border-bottom:2px solid #fff;margin-bottom:-1px;font-weight:700">Dashboard</div><div style="font-size:12px;padding:5px 12px;color:#888">Project Management</div><div style="font-size:12px;padding:5px 12px;color:#888">Update Task List</div></div></div><div style="padding:12px;display:flex;gap:12px"><div style="flex:3;display:flex;flex-direction:column;gap:10px"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">01 Dashboard</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">02</div><p class="info-label" style="text-align:left;">Active Projects</p></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">07</div><p class="info-label" style="text-align:left;">Total Tasks</p></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:22px;font-weight:700">01</div><p class="info-label" style="text-align:left;">Completed Tasks</p></div></div></div><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">02 Project Management</div><div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><b style="font-size:12px">Grab Transport</b><p class="info-label" style="text-align:left;">Deadline: 30 Nov 2026</p><p class="info-label" style="text-align:left;">Progress: 25%</p><div style="height:6px;background:#ccc"><div style="height:6px;width:25%;background:#000"></div></div></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><b style="font-size:12px">7-Eleven Campaign</b><p class="info-label" style="text-align:left;">Deadline: 15 Dec 2026</p><p class="info-label" style="text-align:left;">Progress: 0%</p><div style="height:6px;background:#ccc"><div style="height:6px;width:0%;background:#000"></div></div></div></div></div></div><div style="flex:2"><div style="border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;"><div style="font-size:11px;font-weight:700;letter-spacing:.6px;border-bottom:1px solid #ccc;padding-bottom:4px">ACTION REQUIRED</div><p class="hint-text">[TBD — No pending items — E-dashboard-tasks-002]</p></div></div></div></div>
+    </div>
+    <div class="wf-screen-label">home-empty</div>
+  </div>
+  </div>
+
+  <div class="wf-desc-section">
+    <div class="wf-desc-title">Screen description</div>
+    <table class="wf-desc-table">
+      <thead>
+        <tr><th>#</th><th>Items</th><th>Control type</th><th>Data type</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr class="wf-desc-screen-header"><td colspan="5">Screen 1: Home — Dashboard</td></tr>
+<tr><td>1</td><td>Header</td><td>Label</td><td>ReadOnly</td><td>Logo + "LEAP UP / CLIENT PROJECT PORTAL" (L8).</td></tr>
+<tr><td>2</td><td>Tabs</td><td>Link</td><td>Click</td><td>Dashboard / Project Management / Update Task List (L13–L15; FR-dashboard-tasks-001). Who sees Home (clients?) TBD (spec OQ-4).</td></tr>
+<tr><td>3</td><td>Stat cards</td><td>Label</td><td>ReadOnly</td><td>Active Projects, Total Tasks, Completed Tasks (L20–L37; FR-dashboard-tasks-002). Counting rules TBD (spec OQ-1). Only assigned projects (FR-dashboard-tasks-011).</td></tr>
+<tr><td>4</td><td>Project cards</td><td>Button</td><td>Click</td><td>Name, "Deadline: {date}", "Progress: {n}%" + bar (L49–L74; FR-dashboard-tasks-003). Progress rule TBD. Click target TBD (project screen assumed).</td></tr>
+<tr><td>5</td><td>Task tables by project</td><td>Label</td><td>ReadOnly</td><td>TASK / OWNER / DUE / STATUS (L82–L186; FR-dashboard-tasks-004). Status values BR-dashboard-tasks-001. Realtime is OUT (NFR-dashboard-tasks-001; C2 OPEN).</td></tr>
+<tr><td>6</td><td>ACTION REQUIRED</td><td>Label</td><td>ReadOnly</td><td>"{n} Pending Reviews" + note (L194–L196; FR-dashboard-tasks-009). Item sources TBD (spec OQ-3). None → E-dashboard-tasks-002 (wording TBD).</td></tr>
+<tr><td>7</td><td>Action item</td><td>Label</td><td>ReadOnly</td><td>Title, project, area, description, "Due: {date}, {time}" (L200–L231).</td></tr>
+<tr><td>8</td><td>Review Now</td><td>Button</td><td>Click</td><td>Opens the item's review screen (FR-dashboard-tasks-010). Targets TBD (spec OQ-3).</td></tr>
+<tr class="wf-desc-screen-header"><td colspan="5">Screen 2: Home — no action required</td></tr>
+<tr><td>1</td><td>Empty Action Required</td><td>Label</td><td>ReadOnly</td><td>No item awaiting review. E-dashboard-tasks-002, wording TBD.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-footer">
+    <span>dashboard-tasks / overview</span>
+    <span>Generated by /wireframe-html · 2026-11-22</span>
+  </div>
+
+</div>
+</body>
+</html>

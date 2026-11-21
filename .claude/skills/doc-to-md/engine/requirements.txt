@@ -1,0 +1,10 @@
+# /doc-to-md engine — installed into .tools/convert/ (gitignored) by setup.ps1
+markitdown[all]==0.1.8
+python-docx==1.2.0
+openpyxl==3.1.5
+python-pptx==1.0.2
+pymupdf==1.28.2
+# bundles the pandoc binary used for .docx / .epub (no separate install)
+pypandoc-binary==1.15
+# fixtures only (make_fixtures.py builds the test PDF)
+reportlab==5.0.1

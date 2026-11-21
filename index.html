@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leap Up Portal — Wireframes</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f4f4; color: #000; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  p.sub { color: #555; margin: 0 0 24px; font-size: 14px; line-height: 1.5; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 28px 0 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  a.card { display: block; background: #fff; border: 1px solid #000; border-radius: 6px; padding: 14px; text-decoration: none; color: #000; }
+  a.card:hover { background: #f0f0f0; }
+  .card b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .card span { font-size: 12px; color: #555; }
+  .muted { background: #fff; border: 1px dashed #888; border-radius: 6px; padding: 14px; font-size: 13px; color: #555; }
+  footer { margin-top: 32px; font-size: 12px; color: #555; }
+  footer a { color: #000; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Leap Up Client Project Portal — Wireframes</h1>
+  <p class="sub">Black-and-white wireframes redrawn from the agreed Miro board, with a screen description table under each flow. Draft for review, 2026-11-22. Board data is sample data; states the board does not draw are marked TBD.</p>
+
+  <h2>Phase 1 — MVP</h2>
+  <div class="grid">
+    <a class="card" href="docs/auth-access/html-wireframe/auth-access-wireframe.html"><b>Login &amp; access</b><span>Board 01 · 4 screens</span></a>
+    <a class="card" href="docs/project-files/html-wireframe/project-files-wireframe.html"><b>Project Files</b><span>Board 03 · 4 screens</span></a>
+    <a class="card" href="docs/video-review/html-wireframe/video-review-wireframe.html"><b>Video Review</b><span>Board 07 · 3 screens</span></a>
+    <div class="muted"><b>Admin</b><br>Not drawn — no board design yet (open item C3).</div>
+  </div>
+
+  <h2>Phase 2</h2>
+  <div class="grid">
+    <a class="card" href="docs/dashboard-tasks/html-wireframe/dashboard-tasks-wireframe.html"><b>Dashboard &amp; Tasks</b><span>Board 02 · 4 screens</span></a>
+    <a class="card" href="docs/production-timeline/html-wireframe/production-timeline-wireframe.html"><b>Production Timeline</b><span>Board 04 · 2 screens</span></a>
+    <a class="card" href="docs/outcome-approval/html-wireframe/outcome-approval-wireframe.html"><b>Outcome Approval</b><span>Board 08 · 3 screens</span></a>
+    <div class="muted"><b>E-mail notifications</b><br>No screens (e-mail only).</div>
+  </div>
+
+  <footer>Full proposal (specs, flows, use cases, diagrams, stories, timeline): see the repository README.</footer>
+</main>
+</body>
+</html>
