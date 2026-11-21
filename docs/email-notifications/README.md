@@ -1,5 +1,7 @@
 # email-notifications — pipeline status
 
+**Miro board section:** no board screen (e-mail only) — see [board map](../portal/board-map.md).
+
 E-mail on new video, comment, approval (quote P2 #4; no UI). Scope: **P2**.
 
 | Step | Status | Date | File |

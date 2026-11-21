@@ -1,5 +1,7 @@
 # video-review — pipeline status
 
+**Miro board section:** OUTCOME REVIEW (L5) › OUTCOME REVIEW (L7) — see [board map](../portal/board-map.md).
+
 Video player, timecoded comments, markers, rounds and versions (quote P1 #3; board 07). Scope: **MVP**.
 
 | Step | Status | Date | File |

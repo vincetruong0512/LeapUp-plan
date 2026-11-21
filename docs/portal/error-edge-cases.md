@@ -93,7 +93,22 @@ Rules (🔵 proposed): never show success before the action is confirmed · keep
 | EC-25 | Approval pressed twice / already approved by someone else | P-already-approved | 🔵 | **C5** | Form banner | "This version was already approved on {date}." | Recorded once only |
 | EC-26 | Client input upload fails (C6) | E-production-timeline-002 | 🟢 | C3 | Form banner | as EC-11 | Item stays "Missing" |
 
-### F. Any page
+### F. Not quoted — change request only (OUT)
+
+| ID | Scenario | Code | Source | Crit. | Display | Proposed wording | Proposed behaviour |
+|---|---|---|---|---|---|---|---|
+| EC-29 | Material category has no options | E-material-library-001 | 🟢 | — | Empty state | "No options in this category yet." | Other categories selectable |
+| EC-30 | Option feedback saved empty | E-material-library-002 | 🟢 | — | Field message | "Write your feedback first." | Nothing saved |
+| EC-31 | Option visual upload fails | E-material-library-003 | 🟢 | C3 | Form banner | as EC-11 | Demo visual stays |
+| EC-32 | Submit for approval with nothing selected | E-material-library-004 | 🟢 | C4 | Form banner | "Select a preferred option before submitting." | Nothing submitted |
+| EC-33 | Approve storyboard while frames are not settled | E-storyboard-review-001 | 🟢 | **C5** | Form banner | "Some shots still need review." | Nothing approved or locked |
+| EC-34 | Frame comment saved empty | E-storyboard-review-002 | 🟢 | — | Field message | "Write a comment first." | Nothing saved |
+| EC-35 | Change attempted after the storyboard is locked | E-storyboard-review-003 | 🟢 | **C5** | Form banner | "This storyboard is approved and locked. Changes start a new revision." | Locked version unchanged |
+| EC-36 | User who may not approve presses Approve storyboard | E-storyboard-review-004 | 🟢 | **C5** | Form banner | as EC-23 | Nothing recorded |
+
+These are outside the error flow diagram in §4, which covers the quoted scope; their flows are in [material-library-userflow](../material-library/srs/material-library-userflow.md) and [storyboard-review-userflow](../storyboard-review/srs/storyboard-review-userflow.md).
+
+### G. Any page
 
 | ID | Scenario | Code | Source | Crit. | Display | Proposed wording | Proposed behaviour |
 |---|---|---|---|---|---|---|---|
@@ -102,7 +117,7 @@ Rules (🔵 proposed): never show success before the action is confirmed · keep
 
 **Not shown to users:** e-mail send failure (E-email-notifications-001) and missing e-mail address (E-email-notifications-002) — no UI; the triggering action still succeeds.
 
-**Counts:** 28 scenarios · 20 documented 🟢 · 8 proposed 🔵 · 10 critical in bold.
+**Counts:** 36 scenarios · 28 documented 🟢 (8 of them OUT, section F) · 8 proposed 🔵 · 13 critical in bold.
 
 ## 4. Error flow diagram (🔵 proposed)
 

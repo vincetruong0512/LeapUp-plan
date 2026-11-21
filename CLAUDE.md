@@ -15,7 +15,7 @@ This repo holds the sources, analysis and plans. It is not the app's codebase.
 |---|---|---|
 | **Phase 1 = MVP** (month 1) | Foundation and admin (login, per-project roles, create projects and client accounts, assign members) · **Project Files** (Proposal / Material / Outcome folders, upload, status, search, download) · **Video Review** (online player, timecoded comments, timeline markers, rounds and versions) · deployment and handover | **Focus here first** |
 | Phase 2 (month 2) | Dashboard and task list (Action Required) · Production Timeline (5 stages, milestones) · Outcome Approval (per-version approval, change requests, approval log, final sign-off) · email notifications · testing and acceptance | Plan, don't build ahead |
-| Out of scope (quoted) | Material Library · Storyboard Review · in-app notifications · realtime updates · multi-company SaaS | Log as post-MVP; don't design for them |
+| Out of scope (quoted) | Material Library · Storyboard Review · in-app notifications · realtime updates · multi-company SaaS | Log as post-MVP; don't design for them. Exception (BA, 2026-11-22): Material Library and Storyboard Review are documented in full, tagged OUT, as change-request candidates — never scheduled without a CR |
 
 **MVP outcome:** Leap Up can create a project, invite the client, share files and review video with the
 client, end to end.

@@ -1,5 +1,7 @@
 # outcome-approval — pipeline status
 
+**Miro board section:** OUTCOME REVIEW (L5) › OUTCOME APPROVAL (L198) — see [board map](../portal/board-map.md).
+
 Version approval, change requests, approval log, final sign-off (quote P2 #3; board 08; C4/C5/C9 OPEN). Scope: **P2**.
 
 | Step | Status | Date | File |

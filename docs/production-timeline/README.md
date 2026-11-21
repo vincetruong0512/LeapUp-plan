@@ -1,5 +1,7 @@
 # production-timeline — pipeline status
 
+**Miro board section:** PROJECT DEMO (L4) › PROPOSAL | PROJECT TIMELINE (L190) — see [board map](../portal/board-map.md).
+
 Five production stages and milestones (quote P2 #2; board 04; C6 OPEN). Scope: **P2**.
 
 | Step | Status | Date | File |

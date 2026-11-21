@@ -1,5 +1,7 @@
 # admin — pipeline status
 
+**Miro board section:** no board screen (C3) — see [board map](../portal/board-map.md).
+
 Create projects, client accounts, assign members (quote P1 #1; no board design — C3). Scope: **MVP**.
 
 | Step | Status | Date | File |

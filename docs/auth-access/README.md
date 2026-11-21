@@ -1,5 +1,7 @@
 # auth-access — pipeline status
 
+**Miro board section:** LOGIN (L2) — see [board map](../portal/board-map.md).
+
 Sign-in, sign-out and project-scoped access (quote P1 #1; board 01 L18–L170). Scope: **MVP**.
 
 | Step | Status | Date | File |

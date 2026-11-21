@@ -16,6 +16,7 @@ This repository holds the **requirements proposal**: scope, requirements specs, 
 | [Error & edge cases](docs/portal/error-edge-cases.md) | 28 scenarios where users must see an error + one error flow diagram |
 | [Technical solution design](docs/portal/technical-solution-design.md) | Fixed constraints from the quote vs technical proposals |
 | [Project overview](docs/portal/brainstorms/project-overview.md) | Goals, users, end-to-end MVP flow |
+| [Board map](docs/portal/board-map.md) | Every Miro board column, section bar (PROJECT STATUS, PROPOSAL \| PROJECT TIMELINE, MARTERIAL ALIGNMENT, MATERIAL \| DETAIL SCRIPT & STORY BOARD, OUTCOME REVIEW, OUTCOME APPROVAL) and screen → where it is documented; 479/479 board lines covered |
 
 ## Scope at a glance
 
@@ -33,10 +34,15 @@ flowchart LR
         H --> I["E-mail notifications"]
         I --> J["Testing & acceptance"]
     end
+    subgraph CR["Not quoted — change request only (quote §6, §7)"]
+        K["Material Library"]
+        L["Storyboard Review"]
+    end
     E --> F
+    J -.->|"if ordered"| K
 ```
 
-**Not quoted (post-MVP):** Material Library, Storyboard Review, in-app notifications, realtime updates, multi-company SaaS.
+**Not quoted:** Material Library and Storyboard Review are designed on the board and fully documented here (tagged **OUT**), but they need a separate change request. Also excluded: in-app notifications, realtime updates, multi-company SaaS.
 
 ## Documents per feature
 
@@ -50,10 +56,12 @@ flowchart LR
 | P2 | Production Timeline | [spec](docs/production-timeline/srs/production-timeline-spec.md) | [flow](docs/production-timeline/srs/production-timeline-userflow.md) | [HTML](docs/production-timeline/html-wireframe/production-timeline-wireframe.html) | [UCs](docs/production-timeline/usecases/production-timeline-usecase-index.md) | [flows](docs/production-timeline/srs/production-timeline-flows.md) | [stories](docs/production-timeline/userstories/production-timeline-story-index.md) |
 | P2 | Outcome Approval | [spec](docs/outcome-approval/srs/outcome-approval-spec.md) | [flow](docs/outcome-approval/srs/outcome-approval-userflow.md) | [HTML](docs/outcome-approval/html-wireframe/outcome-approval-wireframe.html) | [UCs](docs/outcome-approval/usecases/outcome-approval-usecase-index.md) | [flows](docs/outcome-approval/srs/outcome-approval-flows.md) | [stories](docs/outcome-approval/userstories/outcome-approval-story-index.md) |
 | P2 | E-mail notifications | [spec](docs/email-notifications/srs/email-notifications-spec.md) | [flow](docs/email-notifications/srs/email-notifications-userflow.md) | no UI | [UCs](docs/email-notifications/usecases/email-notifications-usecase-index.md) | [flows](docs/email-notifications/srs/email-notifications-flows.md) | [stories](docs/email-notifications/userstories/email-notifications-story-index.md) |
+| OUT | Material Library | [spec](docs/material-library/srs/material-library-spec.md) | [flow](docs/material-library/srs/material-library-userflow.md) | [HTML](docs/material-library/html-wireframe/material-library-wireframe.html) | [UCs](docs/material-library/usecases/material-library-usecase-index.md) | [flows](docs/material-library/srs/material-library-flows.md) | [stories](docs/material-library/userstories/material-library-story-index.md) |
+| OUT | Storyboard Review | [spec](docs/storyboard-review/srs/storyboard-review-spec.md) | [flow](docs/storyboard-review/srs/storyboard-review-userflow.md) | [HTML](docs/storyboard-review/html-wireframe/storyboard-review-wireframe.html) | [UCs](docs/storyboard-review/usecases/storyboard-review-usecase-index.md) | [flows](docs/storyboard-review/srs/storyboard-review-flows.md) | [stories](docs/storyboard-review/userstories/storyboard-review-story-index.md) |
 
 Brainstorms (background and open points) are in `docs/{feature}/brainstorms/`. Jira import drafts are in [docs/exports](docs/exports/).
 
-**Totals:** 8 features · 84 functional requirements · 25 error codes · 19 use cases · 19 diagrams · 30 user stories · 65 acceptance criteria (drafts) · 20 wireframe screens.
+**Totals:** 10 features (8 quoted + 2 OUT) · 110 functional requirements · 33 error codes · 23 use cases · 23 diagrams · 37 user stories · 82 acceptance criteria (drafts) · 29 wireframe screens. Quoted scope only: 84 FR · 25 errors · 19 use cases · 30 stories · 65 AC · 20 screens.
 
 ## How to read the markers
 

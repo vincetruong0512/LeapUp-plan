@@ -27,9 +27,13 @@ Plan for the development team, built from the quote and the Miro board only. Any
 | | Outcome Approval (`outcome-approval`) | P2 #3 | 08 | 4 | done (draft); C4/C5/C9 OPEN |
 | | E-mail notifications (`email-notifications`) | P2 #4 | — | 3 | no UI |
 | | Testing & acceptance | P2 #5 | — | work package (§3) | — |
-| **Not quoted (post-MVP)** | Material Library (board 05), Storyboard Review (board 06), in-app notifications, realtime updates, multi-company SaaS | §7 | 05, 06 | — | not planned |
+| **Not quoted — change request (OUT)** | Material Library (`material-library`, board section "MARTERIAL ALIGNMENT") | §7 | 05 | 4 | fully documented (draft); not scheduled |
+| | Storyboard Review (`storyboard-review`, board section "MATERIAL \| DETAIL SCRIPT & STORY BOARD") | §7 | 06 | 3 | fully documented (draft); not scheduled |
+| | In-app notifications, realtime updates, multi-company SaaS | §7 | — | — | not planned |
 
-Totals: 8 features · 84 functional requirements · 25 error codes (wording TBD) · 30 user stories · 65 acceptance criteria (drafts) · 20 wireframe screens on 6 features.
+Totals (quoted scope): 8 features · 84 functional requirements · 25 error codes (wording TBD) · 30 user stories · 65 acceptance criteria (drafts) · 20 wireframe screens on 6 features. OUT add-ons: 2 features · 26 FR · 8 error codes · 7 stories · 17 AC · 9 screens. Board → feature map: [board-map.md](board-map.md).
+
+**Change-request add-ons (not in the 8 weeks):** Material Library and Storyboard Review are ready to estimate if Leap Up orders them (quote §6). They depend on Project Files (upload, R2) and on the approver rule (C4); they are not in the sprint plan below.
 
 **Phase 1 outcome (quote p.1):** "Sau phase 1, Leap Up đã có thể tạo project, mời khách, gửi file và review video với khách."
 

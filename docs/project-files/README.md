@@ -1,5 +1,7 @@
 # project-files — pipeline status
 
+**Miro board section:** PROJECT DEMO (L4) › PROJECT STATUS (L6) — see [board map](../portal/board-map.md).
+
 Project Files tab: folders, file table, upload, search, download (quote P1 #2; board 03). Scope: **MVP**.
 
 | Step | Status | Date | File |

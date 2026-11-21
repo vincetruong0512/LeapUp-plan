@@ -1,5 +1,7 @@
 # dashboard-tasks — pipeline status
 
+**Miro board section:** HOME PAGE (L3) — see [board map](../portal/board-map.md).
+
 Home dashboard, task list, Action Required (quote P2 #1; board 02). Scope: **P2**.
 
 | Step | Status | Date | File |
