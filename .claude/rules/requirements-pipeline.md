@@ -57,11 +57,15 @@ Licence: keep copyright notices and watermarks; keep all BA-Kit files gitignored
 **Tier 2 installed 2026-11-22 (supporting, outside the six steps; run after `/srs`):** `/usecase` (Cockburn use
 cases + trace index), `/sequence` and `/activity` (Mermaid diagrams in `srs/{feature}-flows.md`).
 
+**Installed 2026-11-22 at the user's request (moved off the deferred list):** `/prototype-html` — interactive
+prototype after `/wireframe-html`; `portal` mode covers all quoted MVP + P2 flows. Its comment layer sends data
+to jsonbin.io: off by default, warn and get a yes before embedding.
+
 **Tier 2 (not installed yet, port on request per [skill-authoring.md](skill-authoring.md)):** `/erd`, `/state`, `/wireframe-ascii`, `/cr`, `/gap`, `/ask`, `/preview`, `/export`,
 `/userguide` (the user guide is a Phase 1 deliverable, quote P1 #4), `/test-checklist` + `/test-cases`, `/kg`,
 `/update-overview`, `/dashboard`. Decided 2026-11-21: `/usecase-diagram` and `/activity-swimlane` will be
 installed but must **warn and get a yes before every render**, because they send diagram text to the public
 plantuml.com server. **Deferred (don't fit the MVP now):** `/api-*`, `/discover`, `/roadmap`, `/doc-drift`,
-`/prototype-html`, `/prototype-next`, `/dbdiagram`.
+`/prototype-next`, `/dbdiagram`.
 
 Don't run a step whose skill isn't installed; say which one is missing.

@@ -12,6 +12,7 @@ This repository holds the **requirements proposal**: scope, requirements specs, 
 
 | Read | What you get |
 |---|---|
+| [Clickable prototype](docs/portal/prototype/portal-prototype.html) | All quoted flows (MVP + Phase 2) as one working demo app: sign in as sample users, upload files, comment on video, approve. Open via the gallery link above |
 | [Delivery plan](docs/portal/delivery-plan.md) | Scope by phase, 8-week timeline, story order per sprint, open points by deadline |
 | [Error & edge cases](docs/portal/error-edge-cases.md) | 28 scenarios where users must see an error + one error flow diagram |
 | [Technical solution design](docs/portal/technical-solution-design.md) | Fixed constraints from the quote vs technical proposals |

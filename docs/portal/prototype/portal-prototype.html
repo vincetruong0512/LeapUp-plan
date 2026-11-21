@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<!--
+  Leap Up Client Project Portal — interactive prototype (draft for review, 2026-11-22)
+  Built with /prototype-html portal from: docs/{feature}/srs/{feature}-userflow.md, -spec.md and the
+  5-column screen tables in docs/{feature}/html-wireframe/*.html. Board sample data (Miro board, Lnnn).
+  Scope: MVP (auth-access, admin, project-files, video-review) + P2 (dashboard-tasks, production-timeline,
+  outcome-approval, email-notifications as an outbox). OUT features are not prototyped.
+  Anything not stated in the quote/board shows a "TBD" tag. Error codes live in JS comments only.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leap Up Portal — Prototype</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ══════════ LAYER 1: SHELL CHROME (neutral B&W — never app tokens) ══════════ */
+  :root { --chrome-bg: #f4f4f4; --chrome-panel: #fff; --chrome-line: #ccc; --chrome-ink: #000; --chrome-muted: #777; }
+  html { font-size: 14px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--chrome-bg); color: var(--chrome-ink); min-height: 100vh; }
+  .proto-stage { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; }
+  .proto-app { min-width: 0; width: min(var(--device-w, 375px), 100%); background: var(--bg); position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .proto-stage[data-device="desktop"] .proto-app { width: min(1024px, 100%); min-height: calc(100vh - 64px); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+  @media (max-width: 480px) { .proto-stage { padding: 0; } .proto-stage[data-device="desktop"] .proto-app { border-radius: 0; box-shadow: none; min-height: 100vh; } }
+
+  .proto-fab { position: fixed; right: 20px; bottom: 20px; z-index: 900; width: 52px; height: 52px; border-radius: 50%; background: var(--chrome-ink); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .proto-fab svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.6; }
+  .proto-panel { position: fixed; right: 20px; bottom: 84px; z-index: 901; width: 360px; max-width: calc(100vw - 40px); max-height: calc(100vh - 120px); background: var(--chrome-panel); color: var(--chrome-ink); border: 1px solid var(--chrome-ink); border-radius: 12px; overflow: hidden; display: none; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  .proto-panel.open { display: flex; }
+  .proto-panel-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--chrome-line); }
+  .proto-panel-head .feat { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--chrome-muted); }
+  .proto-panel-head .close { margin-left: auto; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--chrome-ink); }
+  .proto-tabs { display: flex; border-bottom: 1px solid var(--chrome-line); }
+  .proto-tab { flex: 1; padding: 9px; background: none; border: none; border-bottom: 2px solid transparent; font-size: 12px; cursor: pointer; color: var(--chrome-muted); font-family: inherit; }
+  .proto-tab.active { color: var(--chrome-ink); border-bottom-color: var(--chrome-ink); font-weight: 700; }
+  .proto-panel-body { overflow-y: auto; padding: 10px 0; }
+  .proto-pane { display: none; } .proto-pane.active { display: block; }
+  .toc-section { padding: 10px 14px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--chrome-muted); display: flex; gap: 6px; align-items: center; }
+  .toc-badge { border: 1px solid var(--chrome-ink); color: var(--chrome-ink); border-radius: 3px; padding: 0 4px; font-size: 9px; letter-spacing: .4px; }
+  .toc-badge.p2 { border-style: dashed; }
+  .toc-link { display: block; padding: 6px 14px 6px 26px; font-size: 13px; color: var(--chrome-ink); text-decoration: none; border-left: 3px solid transparent; cursor: pointer; }
+  .toc-link:hover { background: #f4f4f4; }
+  .toc-link.active { border-left-color: #000; background: #f0f0f0; font-weight: 700; }
+  .toc-link small { color: var(--chrome-muted); font-weight: 400; }
+  .flowmap { padding: 10px 14px; display: flex; flex-direction: column; gap: 12px; }
+  .flowgroup { border: 1px solid var(--chrome-line); border-radius: 8px; padding: 10px; }
+  .flowgroup h3 { font-size: 12px; margin-bottom: 8px; }
+  .chain { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .node { border: 1.5px solid #000; border-radius: 6px; padding: 4px 8px; font-size: 11px; background: #fff; cursor: pointer; text-decoration: none; color: #000; }
+  .node:hover { background: #f0f0f0; }
+  .node.edge { background: repeating-linear-gradient(45deg,#fff,#fff 4px,#f0f0f0 4px,#f0f0f0 8px); }
+  .node.error { background: #000; color: #fff; }
+  .arrow { color: var(--chrome-muted); font-size: 12px; }
+  .legend { padding: 0 14px; font-size: 10px; color: var(--chrome-muted); line-height: 1.5; }
+  .sim-note { padding: 0 14px 6px; font-size: 11px; color: var(--chrome-muted); line-height: 1.45; }
+  .sim-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 12px; }
+  .sim-row .who { flex: 1; min-width: 0; }
+  .sim-row .who small { display: block; color: var(--chrome-muted); }
+  .sim-btn { border: 1px solid var(--chrome-ink); background: #fff; color: #000; border-radius: 6px; padding: 4px 9px; font-size: 11px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .sim-btn.on { background: #000; color: #fff; }
+  .sim-mail { margin: 4px 14px; border: 1px dashed var(--chrome-line); border-radius: 6px; padding: 6px 8px; font-size: 11px; line-height: 1.4; }
+  .sim-mail b { display: block; }
+  .panel-reset { margin: 6px 14px 12px; padding: 8px; width: calc(100% - 28px); background: none; border: 1px solid var(--chrome-line); border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--chrome-muted); font-family: inherit; }
+  .panel-reset:hover { border-color: #000; color: #000; }
+  .demo-notice { position: fixed; left: 12px; bottom: 12px; z-index: 700; background: rgba(255,255,255,0.9); border: 1px solid var(--chrome-line); color: var(--chrome-muted); font-size: 10px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; pointer-events: none; opacity: 0.75; }
+
+  /* ══════════ LAYER 2: APP (greyscale tokens — no design.md, no brand colours: TBD) ══════════ */
+  :root {
+    --palette-0: #ffffff; --palette-50: #f7f7f7; --palette-100: #efefef; --palette-200: #e2e2e2; --palette-300: #cfcfcf;
+    --palette-400: #a8a8a8; --palette-500: #7a7a7a; --palette-600: #555555; --palette-700: #3d3d3d; --palette-800: #262626; --palette-900: #111111;
+  }
+  :root, [data-theme="light"] {
+    color-scheme: light;
+    --bg: var(--palette-50); --surface: var(--palette-0); --soft: var(--palette-100); --ink: var(--palette-900);
+    --muted: var(--palette-600); --line: var(--palette-200); --line-strong: var(--palette-400);
+    --accent: var(--palette-900); --accent-ink: var(--palette-0); --frame: var(--palette-800); --frame-ink: var(--palette-300);
+    --focus-ring: var(--palette-900);
+  }
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --bg: var(--palette-900); --surface: var(--palette-800); --soft: var(--palette-700); --ink: var(--palette-50);
+    --muted: var(--palette-300); --line: var(--palette-700); --line-strong: var(--palette-500);
+    --accent: var(--palette-50); --accent-ink: var(--palette-900); --frame: var(--palette-0); --frame-ink: var(--palette-600);
+    --focus-ring: var(--palette-0);
+  }
+  [data-theme] { background-color: var(--bg); color: var(--ink); }
+  dialog { margin: auto; border: none; padding: 0; background: transparent; max-width: calc(100% - 32px); }
+  dialog::backdrop { background: rgba(0,0,0,0.5); }
+  [data-screen] { display: none; flex-direction: column; }
+  [data-screen].active { display: flex; }
+
+  /* app component CSS (semantic tokens only) */
+  .proto-app :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  :where(.proto-app) svg { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
+  .app-shell { display: grid; grid-template-columns: 196px 1fr; flex: 1; min-height: calc(100vh - 64px); }
+  .app-shell.hidden { display: none; }
+  .side { background: var(--surface); border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .brand { font-size: 11px; letter-spacing: 1px; font-weight: 800; line-height: 1.3; margin: 0 6px 16px; }
+  .brand small { display: block; font-weight: 500; color: var(--muted); letter-spacing: .6px; }
+  .nav-h { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 14px 8px 4px; }
+  .nav { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; color: var(--ink); text-decoration: none; cursor: pointer; font-size: 13px; background: none; border: none; font-family: inherit; text-align: left; width: 100%; }
+  .nav svg { width: 16px; height: 16px; flex: none; }
+  .nav:hover { background: var(--soft); }
+  .nav.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 12px; font-size: 12px; }
+  .side-foot .u { font-weight: 600; margin: 0 8px; }
+  .side-foot .r { color: var(--muted); margin: 2px 8px 8px; }
+  .main { min-width: 0; padding: 24px 28px 80px; }
+  @media (max-width: 720px) {
+    .app-shell { display: block; }
+    .side { flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--line); padding: 10px; gap: 4px; }
+    .brand { width: 100%; margin: 0 4px 6px; }
+    .nav-h { display: none; }
+    .nav { width: auto; padding: 6px 8px; }
+    .side-foot { margin: 0; border: none; padding: 0; display: flex; align-items: center; gap: 6px; width: 100%; }
+    .side-foot .r { margin: 0; }
+    .main { padding: 16px 16px 80px; }
+  }
+
+  h1.page { font-size: 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .crumbs { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .crumbs a { color: var(--muted); cursor: pointer; text-decoration: underline; }
+  .sub { color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .section-h { font-size: 11px; text-transform: uppercase; letter-spacing: .9px; color: var(--muted); font-weight: 700; margin: 24px 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-family: inherit; cursor: pointer; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); font-weight: 600; }
+  .btn svg { width: 15px; height: 15px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 6px; }
+  .btn-ghost { border-color: var(--line-strong); font-weight: 500; }
+  .btn-block { width: 100%; justify-content: center; padding: 11px; }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+  .spin { width: 13px; height: 13px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .text-link { color: var(--ink); text-decoration: underline; cursor: pointer; background: none; border: none; font: inherit; padding: 0; }
+  label.field { display: block; margin-bottom: 14px; }
+  .lbl { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+  .input, .select { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 11px; font: inherit; background: var(--surface); color: var(--ink); }
+  .input[aria-invalid="true"], .select[aria-invalid="true"] { border: 2px solid var(--ink); }
+  .pw-wrap { position: relative; }
+  .pw-wrap .input { padding-right: 60px; }
+  .pw-wrap .show { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; }
+  span.err-inline { display: none; font-size: 12px; margin-top: 5px; font-weight: 600; }
+  span.err-inline.show { display: flex; gap: 6px; align-items: center; }
+  span.err-inline::before, .banner.err::before { content: "!"; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: none; border: 1.5px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 800; margin-right: 6px; vertical-align: -2px; }
+  .banner { display: none; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.45; border: 1px solid var(--line-strong); background: var(--soft); }
+  .banner.show { display: block; }
+  .banner.err { border: 2px solid var(--ink); background: var(--surface); }
+  .tbd { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; border: 1px dashed var(--line-strong); color: var(--ink); border-radius: 3px; padding: 0 4px; vertical-align: middle; margin-left: 4px; cursor: help; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line-strong); white-space: nowrap; background: var(--surface); color: var(--ink); }
+  .pill.solid { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .pill.dash { border-style: dashed; }
+  .pill.soft { background: var(--soft); border-color: var(--soft); color: var(--muted); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .t th { text-align: left; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .t td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .t tr:last-child td { border-bottom: none; }
+  .t td:not(:first-child) { white-space: nowrap; }
+  .t .select { padding: 4px 6px; font-size: 12px; width: auto; }
+  .empty { text-align: center; color: var(--muted); padding: 28px 12px; line-height: 1.5; }
+  .empty svg { width: 28px; height: 28px; display: block; margin: 0 auto 8px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 18px 0 4px; flex-wrap: wrap; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 9px 12px; font: inherit; color: var(--muted); cursor: pointer; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 800; background: var(--accent); color: var(--accent-ink); padding: 10px 16px; border-radius: 8px; font-size: 13px; display: none; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+  .toast.show { display: block; }
+  .modal { background: var(--surface); color: var(--ink); border-radius: 12px; padding: 20px; width: 440px; max-width: 100%; }
+  .modal h2 { font-size: 17px; margin-bottom: 4px; }
+  .modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .chips { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .chip { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+  .chip svg { width: 14px; height: 14px; }
+
+  /* login */
+  [data-screen="login"] { flex-direction: row; min-height: calc(100vh - 64px); }
+  [data-screen="login"]:not(.active) { display: none; }
+  .login-brand { flex: 1; background: var(--soft); padding: 40px; display: flex; flex-direction: column; gap: 22px; }
+  .logo-ph { width: 120px; height: 44px; border: 1.5px dashed var(--line-strong); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); }
+  .tagline { font-size: 30px; font-weight: 800; line-height: 1.15; }
+  .badge-box { border: 1px solid var(--line-strong); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; background: var(--surface); margin-top: auto; }
+  .login-form { flex: 1; padding: 48px 40px; display: flex; align-items: center; }
+  .login-form form { width: 100%; max-width: 340px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+  .note { margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .note b { color: var(--ink); font-size: 11px; letter-spacing: .6px; }
+  @media (max-width: 720px) { [data-screen="login"].active { flex-direction: column; } .login-brand { padding: 24px 16px; } .tagline { font-size: 22px; } .login-form { padding: 24px 16px; } }
+
+  /* project files */
+  .folder { text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+  .folder.active { border: 2px solid var(--ink); }
+  .folder b { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+  .folder b svg { width: 18px; height: 18px; }
+  .folder > span { display: block; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .search { position: relative; flex: 1; min-width: 160px; max-width: 320px; }
+  .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
+  .search .input { padding-left: 32px; }
+
+  /* video review */
+  .vr { display: grid; grid-template-columns: 150px minmax(0,1fr) 240px; gap: 14px; margin-top: 18px; align-items: start; }
+  @media (max-width: 900px) { .vr { grid-template-columns: minmax(0,1fr); } .rounds { flex-direction: row; overflow-x: auto; } .round { min-width: 130px; } }
+  .rounds { display: flex; flex-direction: column; gap: 8px; }
+  .round { text-align: left; font: inherit; color: var(--ink); cursor: pointer; padding: 10px; }
+  .round.active { border: 2px solid var(--ink); }
+  .round b { display: block; font-size: 13px; }
+  .round span { font-size: 11px; color: var(--muted); }
+  .player-file { font-size: 11px; letter-spacing: .6px; color: var(--muted); margin-bottom: 6px; font-weight: 700; }
+  .frame { background: var(--frame); color: var(--frame-ink); border-radius: 8px; aspect-ratio: 16 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-size: 12px; letter-spacing: 1px; text-align: center; padding: 12px; }
+  .frame svg { width: 34px; height: 34px; }
+  .frame .btn { letter-spacing: 0; }
+  .track { position: relative; height: 34px; margin-top: 8px; cursor: pointer; }
+  .track .bar { position: absolute; left: 0; right: 0; top: 6px; height: 6px; background: var(--line); border-radius: 3px; }
+  .track .fill { position: absolute; left: 0; top: 6px; height: 6px; background: var(--ink); border-radius: 3px; width: 0; }
+  .marker { position: absolute; top: 0; transform: translateX(-50%); background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; font: inherit; color: var(--ink); }
+  .marker i { width: 10px; height: 18px; border: 2px solid var(--ink); background: var(--surface); border-radius: 2px; display: block; }
+  .marker.resolved i { border-style: dashed; }
+  .marker small { font-size: 9px; color: var(--muted); }
+  .controls { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; font-size: 12px; }
+  .icon-btn { background: none; border: 1px solid var(--line-strong); border-radius: 6px; padding: 5px 7px; cursor: pointer; color: var(--ink); display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 12px; }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .add-c { display: flex; gap: 8px; margin-top: 12px; align-items: flex-start; }
+  .add-c label { flex: 1; margin: 0; }
+  .cmt { padding: 10px; margin-bottom: 8px; }
+  .cmt.focus { border: 2px solid var(--ink); }
+  .cmt-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .tc { font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 700; border: 1px solid var(--ink); border-radius: 4px; padding: 1px 5px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  .cmt p { font-size: 13px; line-height: 1.45; }
+  .cmt .by { font-size: 11px; color: var(--muted); }
+  .log-row { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .log-row:last-child { border-bottom: none; }
+  .log-row b { width: 70px; flex: none; }
+  .log-row span { color: var(--muted); display: block; font-size: 12px; }
+
+  /* dashboard, timeline, sign-off */
+  .stat b { display: block; font-size: 28px; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--ink); }
+  .action { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .action:last-child { border-bottom: none; }
+  .action .meta { flex: 1; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .action .meta b { color: var(--ink); font-size: 13px; }
+  .stages { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+  @media (max-width: 720px) { .stages { grid-template-columns: 1fr 1fr; } }
+  .stage { padding: 10px; }
+  .stage.done { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .stage.client_review { border: 2px solid var(--ink); }
+  .stage .num { font-size: 10px; font-weight: 800; letter-spacing: .8px; }
+  .stage b { display: block; margin: 6px 0 2px; font-size: 13px; }
+  .stage span { font-size: 11px; opacity: .8; }
+  .two { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); gap: 14px; }
+  @media (max-width: 820px) { .two { grid-template-columns: 1fr; } }
+  .kv { display: flex; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+  .counts b { display: block; font-size: 24px; }
+  .counts span { font-size: 11px; color: var(--muted); }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 5px 0; cursor: pointer; }
+  .check input { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="ic-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 6h6l2 2h10v11H3z"/></symbol>
+    <symbol id="ic-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></symbol>
+    <symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+    <symbol id="ic-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></symbol>
+    <symbol id="ic-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+    <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></symbol>
+    <symbol id="ic-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></symbol>
+    <symbol id="ic-vol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6"/></symbol>
+    <symbol id="ic-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></symbol>
+    <symbol id="ic-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></symbol>
+    <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M18 14a6 6 0 013.5 6"/></symbol>
+    <symbol id="ic-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+  </defs>
+</svg>
+
+<div class="proto-stage" data-device="desktop">
+  <div class="proto-app" data-theme="light">
+
+    <!-- ═══ Sign in (auth-access; board 01) ═══ -->
+    <section data-screen="login" data-theme="light">
+      <div class="login-brand">
+        <div class="logo-ph" data-cmt="login.logo">Leap Up logo</div>
+        <p class="tagline">One portal.<br>Every project.<br>One clear view.</p>
+        <p><b>Client Project Portal</b><br><span class="sub">Secure project-specific collaboration</span></p>
+        <div class="badge-box"><b>PRIVATE CLIENT ACCESS</b><br>Only assigned project content is visible.</div>
+      </div>
+      <div class="login-form">
+        <form id="login-form" novalidate onsubmit="doLogin(event)">
+          <div class="eyebrow">00 / CLIENT LOGIN</div>
+          <h1 class="page">Welcome</h1>
+          <p class="sub" style="margin-bottom:20px">Sign in to access your project workspace.</p>
+          <div class="banner err" id="login-banner" role="alert"></div>
+          <label class="field" for="login-id">
+            <span class="lbl">User ID</span>
+            <input class="input" id="login-id" type="text" autocomplete="username" placeholder="Enter your User ID" aria-invalid="false" data-cmt="login.userid">
+            <span class="err-inline" id="login-id-err">Enter your User ID.<span class="tbd" title="Wording TBD (spec OQ-6)">TBD</span></span>
+          </label>
+          <label class="field" for="login-pw">
+            <span class="lbl">Password</span>
+            <span class="pw-wrap" style="display:block">
+              <input class="input" id="login-pw" type="password" autocomplete="current-password" placeholder="Enter your password" aria-invalid="false" data-cmt="login.password">
+              <button type="button" class="text-link show" id="login-show" onclick="togglePw()">Show</button>
+            </span>
+            <span class="err-inline" id="login-pw-err">Enter your password.<span class="tbd" title="Wording TBD (spec OQ-6)">TBD</span></span>
+          </label>
+          <button class="btn btn-primary btn-block" id="login-submit" type="submit" data-cmt="login.submit">Sign In</button>
+          <div class="note"><b>PROJECT ACCESS NOTE</b><br>Each client receives a unique User ID and Password for each assigned project. Access is project-specific. <span class="tbd" title="Board wording vs the one-User-ID-per-person decision is TBD (auth-access spec OQ-9)">TBD</span></div>
+        </form>
+      </div>
+    </section>
+
+    <div class="app-shell hidden" id="app-shell">
+      <aside class="side" id="side" aria-label="Main navigation"></aside>
+      <main class="main" id="main">
+        <section data-screen="projects" data-theme="light"></section>
+        <section data-screen="denied" data-theme="light"></section>
+        <section data-screen="home" data-theme="light"></section>
+        <section data-screen="tasks" data-theme="light"></section>
+        <section data-screen="project" data-theme="light"></section>
+        <section data-screen="video-review" data-theme="light"></section>
+        <section data-screen="timeline" data-theme="light"></section>
+        <section data-screen="signoff" data-theme="light"></section>
+        <section data-screen="admin-home" data-theme="light"></section>
+
+        <!-- ═══ Admin: create project (layout TBD, C3) ═══ -->
+        <section data-screen="project-form" data-theme="light">
+          <div class="crumbs"><a href="#admin-home">Admin</a> / Create project</div>
+          <h1 class="page">Create project <span class="tbd" title="No board design for admin screens (C3); field list TBD (admin OQ-3)">TBD</span></h1>
+          <p class="sub">The project gets the folders Proposal, Material and Outcome Development, and the status "In Progress".</p>
+          <form class="card" style="margin-top:18px;max-width:520px" novalidate onsubmit="saveProject(event)">
+            <div class="banner err" id="pf-banner" role="alert"></div>
+            <label class="field" for="pf-code"><span class="lbl">Project name *</span>
+              <input class="input" id="pf-code" type="text" placeholder="e.g. 711" aria-invalid="false">
+              <span class="err-inline" id="pf-code-err">Fill in the project name.<span class="tbd" title="Wording TBD">TBD</span></span></label>
+            <label class="field" for="pf-title"><span class="lbl">Description</span>
+              <input class="input" id="pf-title" type="text" placeholder="e.g. Social Campaign Film 30s" aria-invalid="false"></label>
+            <label class="field" for="pf-client"><span class="lbl">Client *</span>
+              <input class="input" id="pf-client" type="text" placeholder="Client company" aria-invalid="false">
+              <span class="err-inline" id="pf-client-err">Fill in the client.<span class="tbd" title="Wording TBD">TBD</span></span></label>
+            <label class="field" for="pf-due"><span class="lbl">Due date</span>
+              <input class="input" id="pf-due" type="text" placeholder="e.g. 15 Dec 2026" aria-invalid="false"></label>
+            <div class="row"><button class="btn btn-primary" id="pf-save" type="submit">Save project</button><button class="btn btn-ghost" type="button" onclick="goto('admin-home')">Cancel</button></div>
+          </form>
+        </section>
+
+        <!-- ═══ Admin: create client account (layout TBD, C3) ═══ -->
+        <section data-screen="account-form" data-theme="light">
+          <div class="crumbs"><a href="#admin-home">Admin</a> / Create client account</div>
+          <h1 class="page">Create client account <span class="tbd" title="No board design for admin screens (C3)">TBD</span></h1>
+          <p class="sub">Only Leap Up creates accounts; there is no self sign-up. One User ID per person covers all of that person's projects. <span class="tbd" title="Decided in the brainstorm (BR-auth-access-003) but the board note on the sign-in page says one ID per project. Confirm (spec OQ-9).">TBD</span></p>
+          <form class="card" style="margin-top:18px;max-width:520px" novalidate onsubmit="saveAccount(event)">
+            <div class="banner err" id="af-banner" role="alert"></div>
+            <label class="field" for="af-id"><span class="lbl">User ID *</span>
+              <input class="input" id="af-id" type="text" placeholder="e.g. brand.711" aria-invalid="false">
+              <span class="err-inline" id="af-id-err">Fill in the User ID.<span class="tbd" title="Wording TBD">TBD</span></span></label>
+            <label class="field" for="af-name"><span class="lbl">Display name</span>
+              <input class="input" id="af-name" type="text" placeholder="Shown to Leap Up" aria-invalid="false"></label>
+            <label class="field" for="af-pw"><span class="lbl">Initial password *</span>
+              <input class="input" id="af-pw" type="password" autocomplete="new-password" aria-invalid="false">
+              <span class="err-inline" id="af-pw-err">Fill in the initial password. Password rules are TBD.<span class="tbd" title="Wording and rules TBD (auth-access OQ-7)">TBD</span></span></label>
+            <div class="row"><button class="btn btn-primary" id="af-save" type="submit">Save account</button><button class="btn btn-ghost" type="button" onclick="goto('admin-home')">Cancel</button></div>
+          </form>
+        </section>
+
+        <section data-screen="members" data-theme="light"></section>
+      </main>
+    </div>
+
+    <!-- dialogs (app layer) -->
+    <dialog id="dlg-upload" aria-labelledby="dlg-upload-h"><form class="modal" novalidate onsubmit="doUpload(event)">
+      <h2 id="dlg-upload-h">Upload files</h2>
+      <p class="sub">Allowed file types and size limit: TBD <span class="tbd" title="project-files OQ-4">TBD</span></p>
+      <div class="banner err" id="up-banner" role="alert" style="margin-top:12px"></div>
+      <label class="field" for="up-folder" style="margin-top:12px"><span class="lbl">Folder <span class="tbd" title="Folder choice TBD (project-files OQ-3)">TBD</span></span>
+        <select class="select" id="up-folder"></select></label>
+      <span class="lbl">Files</span>
+      <div class="chips" id="up-list"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="pickUploadFile()"><svg><use href="#ic-plus"/></svg>Choose file</button>
+      <span class="err-inline" id="up-err">Choose at least one file.<span class="tbd" title="Wording TBD">TBD</span></span>
+      <div class="actions"><button type="button" class="btn btn-ghost" onclick="closeUpload()">Cancel</button><button class="btn btn-primary" id="up-submit" type="submit"><svg><use href="#ic-upload"/></svg>Upload</button></div>
+    </form></dialog>
+
+    <dialog id="dlg-version" aria-labelledby="dlg-version-h"><form class="modal" novalidate onsubmit="doNewVersion(event)">
+      <h2 id="dlg-version-h">Add new version</h2>
+      <p class="sub">How Leap Up adds a version or starts a round is TBD <span class="tbd" title="video-review OQ-3">TBD</span></p>
+      <label class="field" for="nv-target" style="margin-top:12px"><span class="lbl">Round</span><select class="select" id="nv-target"></select></label>
+      <span class="lbl">Video file</span>
+      <div class="chips" id="nv-file"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="pickVersionFile()"><svg><use href="#ic-plus"/></svg>Choose video</button>
+      <span class="err-inline" id="nv-err">Choose a video file.<span class="tbd" title="Wording TBD">TBD</span></span>
+      <div class="actions"><button type="button" class="btn btn-ghost" onclick="closeDlg('dlg-version')">Cancel</button><button class="btn btn-primary" id="nv-submit" type="submit"><svg><use href="#ic-upload"/></svg>Upload version</button></div>
+    </form></dialog>
+
+    <dialog id="dlg-input" aria-labelledby="dlg-input-h"><form class="modal" novalidate onsubmit="doInputUpload(event)">
+      <h2 id="dlg-input-h">Upload inputs</h2>
+      <p class="sub">Target folder, file types and size: TBD <span class="tbd" title="Client Inputs are OPEN C6">TBD</span></p>
+      <div class="banner err" id="in-banner" role="alert" style="margin-top:12px"></div>
+      <label class="field" for="in-item" style="margin-top:12px"><span class="lbl">Missing item</span><select class="select" id="in-item"></select></label>
+      <div class="actions"><button type="button" class="btn btn-ghost" onclick="closeDlg('dlg-input')">Cancel</button><button class="btn btn-primary" id="in-submit" type="submit"><svg><use href="#ic-upload"/></svg>Upload</button></div>
+    </form></dialog>
+
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+</div>
+
+<!-- ════ Floating navigation shell (neutral, outside the app) ════ -->
+<button class="proto-fab" onclick="togglePanel()" title="Navigation" aria-label="Open prototype navigation"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+<div class="proto-panel" id="proto-panel" role="dialog" aria-label="Prototype navigation">
+  <div class="proto-panel-head">
+    <div><div class="feat">Leap Up portal · prototype</div><strong>8 features · 13 screens</strong></div>
+    <button class="close" onclick="togglePanel(false)" aria-label="Close">✕</button>
+  </div>
+  <div class="proto-tabs">
+    <button class="proto-tab active" onclick="switchPane('toc', this)">Contents</button>
+    <button class="proto-tab" onclick="switchPane('flow', this)">Flow map</button>
+    <button class="proto-tab" onclick="switchPane('sim', this)">Off-screen</button>
+  </div>
+  <div class="proto-panel-body">
+    <div class="proto-pane active" id="pane-toc">
+      <div class="toc-section"><span class="toc-badge">MVP</span> Login &amp; access</div>
+      <a class="toc-link" data-goto="login">Sign in <small>(+ error state)</small></a>
+      <a class="toc-link" data-goto="projects">My projects <small>(landing TBD; empty state)</small></a>
+      <a class="toc-link" data-goto="denied">Not allowed <small>(state)</small></a>
+      <div class="toc-section"><span class="toc-badge">MVP</span> Admin <small>· layout TBD (C3)</small></div>
+      <a class="toc-link" data-goto="admin-home">Admin page</a>
+      <a class="toc-link" data-goto="project-form">Create project</a>
+      <a class="toc-link" data-goto="account-form">Create client account</a>
+      <a class="toc-link" data-goto="members">Assign members</a>
+      <div class="toc-section"><span class="toc-badge">MVP</span> Project Files</div>
+      <a class="toc-link" data-goto="project">Project — Project Files tab <small>(upload, search, empty)</small></a>
+      <div class="toc-section"><span class="toc-badge">MVP</span> Video Review</div>
+      <a class="toc-link" data-goto="video-review">Video Review <small>(no video, playback error)</small></a>
+      <div class="toc-section"><span class="toc-badge p2">P2</span> Dashboard &amp; Tasks</div>
+      <a class="toc-link" data-goto="home">Home — Dashboard, Action Required</a>
+      <a class="toc-link" data-goto="tasks">Update Task List / By Project</a>
+      <div class="toc-section"><span class="toc-badge p2">P2</span> Production Timeline</div>
+      <a class="toc-link" data-goto="timeline">Proposal / Production Timeline</a>
+      <div class="toc-section"><span class="toc-badge p2">P2</span> Outcome Approval</div>
+      <a class="toc-link" data-goto="signoff">Revision &amp; Sign-off</a>
+      <p class="legend" style="margin-top:10px">Not prototyped: Material Library and Storyboard Review (OUT, quote §7). E-mail notifications (P2) appear in the Off-screen tab. Opening a screen while signed out signs you in as a sample user.</p>
+    </div>
+    <div class="proto-pane" id="pane-flow">
+      <div class="flowmap">
+        <div class="flowgroup"><h3>Sign in and sign out (MVP)</h3><div class="chain">
+          <a class="node" data-goto="login">Login</a><span class="arrow">→</span><a class="node" data-goto="projects">My projects</a><span class="arrow">·</span>
+          <a class="node error" data-goto="login" title="Wrong or empty credentials">Login error</a><a class="node edge" data-goto="projects" data-as="newclient" title="Signed in, no project">No projects</a></div></div>
+        <div class="flowgroup"><h3>Set up a project and its access (MVP)</h3><div class="chain">
+          <a class="node" data-goto="admin-home">Admin</a><span class="arrow">→</span><a class="node" data-goto="project-form">Create project</a><span class="arrow">→</span><a class="node" data-goto="members">Assign members</a><span class="arrow">·</span>
+          <a class="node" data-goto="account-form">Create account</a><a class="node error" data-goto="admin-home" data-as="brand.711" title="Client opens admin">Not allowed</a></div></div>
+        <div class="flowgroup"><h3>Share, find and download files (MVP)</h3><div class="chain">
+          <a class="node" data-goto="project">Project Files</a><span class="arrow">→</span><a class="node" data-goto="project" data-open="upload">Upload</a><span class="arrow">→</span><a class="node" data-goto="project">Row added</a><span class="arrow">·</span>
+          <a class="node edge" data-goto="project" data-project="pgrab" title="Folder empty / no search match">Empty state</a><a class="node error" data-goto="project" data-open="upload" data-sim="network" title="Arms a failing upload">Upload error</a></div></div>
+        <div class="flowgroup"><h3>Review a round with timecoded comments (MVP)</h3><div class="chain">
+          <a class="node" data-goto="video-review">Video Review</a><span class="arrow">→</span><a class="node" data-goto="video-review">Comment + marker</a><span class="arrow">→</span><a class="node" data-goto="video-review">Next round</a><span class="arrow">·</span>
+          <a class="node edge" data-goto="video-review" data-round="3" title="Upcoming round">No video</a><a class="node error" data-goto="video-review" data-sim="play" title="Arms a playback failure">Playback error</a></div></div>
+        <div class="flowgroup"><h3>Overview and tasks (P2)</h3><div class="chain">
+          <a class="node" data-goto="home">Home</a><span class="arrow">→</span><a class="node" data-goto="video-review">Review Now</a><span class="arrow">·</span><a class="node" data-goto="tasks">Task list</a><span class="arrow">→</span><a class="node error" data-goto="tasks" title="Save a task without a name">Task error</a></div></div>
+        <div class="flowgroup"><h3>Production timeline (P2)</h3><div class="chain">
+          <a class="node" data-goto="timeline">Timeline</a><span class="arrow">→</span><a class="node error" data-goto="timeline" data-as="brand.711" data-sim="network" title="Client upload fails">Upload inputs error</a></div></div>
+        <div class="flowgroup"><h3>Approve, change requests, sign off (P2)</h3><div class="chain">
+          <a class="node" data-goto="signoff">Revision &amp; Sign-off</a><span class="arrow">→</span><a class="node" data-goto="signoff" data-as="brand.711">Approve final</a><span class="arrow">·</span>
+          <a class="node error" data-goto="signoff" data-as="account.leapup" title="Leap Up tries to approve">Not allowed</a><a class="node error" data-goto="signoff" data-as="brand.711" title="Approve with checklist unticked">Checklist incomplete</a></div></div>
+        <p class="legend">White = happy path · striped = edge case · black = error. Some nodes switch the sample user or arm a failure first.</p>
+      </div>
+    </div>
+    <div class="proto-pane" id="pane-sim">
+      <div class="toc-section">Sign in as (sample users)</div>
+      <p class="sim-note">Steps that happen outside the app. Every sample password is <b>demo</b>. Accounts and names are sample data.</p>
+      <div id="sim-users"></div>
+      <div class="toc-section">Make the next action fail</div>
+      <div id="sim-fail"></div>
+      <div class="toc-section"><span class="toc-badge p2">P2</span> E-mail outbox</div>
+      <p class="sim-note">Notification e-mails the portal would send (quote P2 #4). Recipients' e-mail addresses and wording are TBD.</p>
+      <div id="sim-mail"></div>
+    </div>
+  </div>
+  <button class="panel-reset" onclick="resetPrototypeData()">↺ Reset demo data</button>
+</div>
+<div class="demo-notice">Demo — data stays in this browser, nothing is sent</div>
+
+<script>
+// ════ CONSTANTS ════
+const FEATURE = "portal";
+const STORE_KEY = "proto:portal:v1";
+const SCREENS = ["login","projects","denied","home","tasks","project","video-review","timeline","signoff","admin-home","project-form","account-form","members"];
+const DEFAULT_SCREEN = "login";
+const ENTRY_SCREENS = ["login","project-form","account-form"];
+const PROJECT_SCREENS = ["project","video-review","timeline","signoff"];
+const ADMIN_SCREENS = ["admin-home","project-form","account-form","members"];
+const DURATION = 30; // board L145 "00:15 / 00:30"
+
+// enum key → business label (never show raw keys)
+const L = {
+  file: { shared: "Shared", in_review: "In Review", approved: "Approved", final: "Final" },
+  round: { reviewed: "Reviewed", in_review: "In Review", upcoming: "Upcoming" },
+  task: { todo: "To Do", in_progress: "In Progress", pending_review: "Pending Review", completed: "Completed" },
+  side: { leapup: "Leap Up", client: "Client" },
+  stage: { done: "DONE", client_review: "CLIENT REVIEW", up_next: "UP NEXT", not_started: "NOT STARTED" },
+  ms: { done: "Done", waiting: "Waiting", pending: "Pending", not_started: "Not started" },
+  scope: { in: "In scope", out: "Out of scope" },
+  cr: { done: "Done", quote_sent: "Quote sent", client_approved: "Client approved" },
+  input: { received: "Received", missing: "Missing" },
+};
+const FOLDERS = [
+  { key: "proposal", name: "Proposal", lines: ["Proposal deck, approved proposal", "Scope of work"] },
+  { key: "material", name: "Material", lines: ["Client brief, brand assets", "References"] },
+  { key: "outcome", name: "Outcome Development", lines: ["Creative WIP, final deliverables", "Versions and approval status"] },
+];
+const SAMPLE_UPLOADS = ["Brand_Guideline_v2.pdf", "Logo_Pack.zip", "Product_Packshot_01.jpg", "Key_Message_Copy.docx", "Reference_Moodboard.pdf", "Interview_Selects.mp4"];
+
+// ════ DEMO DATA (single source, deterministic; board sample data) ════
+const DEMO = {
+  today: "22 Nov 2026", todayShort: "22 Nov",
+  users: [
+    { id: "admin", name: "Leap Up Admin", side: "leapup", admin: true },
+    { id: "account.leapup", name: "Leap Up Account", side: "leapup" },
+    { id: "producer.leapup", name: "Leap Up Producer", side: "leapup" },
+    { id: "brand.711", name: "7-Eleven Brand Manager", side: "client" },
+    { id: "mkt.711", name: "7-Eleven Marketing Exec", side: "client" },
+    { id: "client.grab", name: "Grab Transport client", side: "client" },
+    { id: "newclient", name: "New client (no project yet)", side: "client" },
+  ],
+  projects: [
+    { id: "p711", code: "711", title: "Social Campaign Film 30s", homeName: "7-Eleven Campaign", client: "7-Eleven", due: "15 Dec 2026", status: "In Progress", progress: 0 },
+    { id: "pgrab", code: "Grab Transport", title: "", homeName: "Grab Transport", client: "Grab Transport", due: "30 Nov 2026", status: "In Progress", progress: 25 },
+  ],
+  members: [
+    { project: "p711", user: "account.leapup", role: "leapup" }, { project: "p711", user: "producer.leapup", role: "leapup" },
+    { project: "p711", user: "brand.711", role: "client" }, { project: "p711", user: "mkt.711", role: "client" },
+    { project: "pgrab", user: "account.leapup", role: "leapup" }, { project: "pgrab", user: "client.grab", role: "client" },
+  ],
+  files: [
+    { id: "f1", project: "p711", name: "711_Proposal Deck_v1.0.pptx", folder: "proposal", date: "19 Nov 2026", by: "leapup", status: "approved" },
+    { id: "f2", project: "p711", name: "711_Approved Proposal.docx", folder: "proposal", date: "18 Nov 2026", by: "leapup", status: "approved" },
+    { id: "f3", project: "p711", name: "711_Scope of Work.docx", folder: "proposal", date: "17 Nov 2026", by: "client", status: "shared" },
+    { id: "f4", project: "p711", name: "711_Brand Assets_V1.mp4", folder: "material", date: "17 Nov 2026", by: "client", status: "shared" },
+    { id: "f5", project: "p711", name: "711_Creative WIP_V2.mp4", folder: "outcome", date: "20 Nov 2026", by: "leapup", status: "in_review" },
+    { id: "f6", project: "p711", name: "711_Final Deliverables_V1.pdf", folder: "outcome", date: "15 Nov 2026", by: "leapup", status: "final" },
+  ],
+  rounds: {
+    p711: [
+      { n: 1, status: "reviewed", date: "15 Nov", video: "Round 1 video", change: "Initial cut shared", line: "Client feedback collected" },
+      { n: 2, status: "in_review", date: "20 Nov", video: "711_FILM_R2_V02.mp4", change: "Opening shortened; music adjusted", line: "Awaiting client approval" },
+      { n: 3, status: "upcoming", date: null, video: null, change: "Final revisions & sign-off", line: "Not started" },
+    ],
+    pgrab: [ { n: 1, status: "upcoming", date: null, video: null, change: "", line: "Not started" } ],
+  },
+  comments: [
+    { id: "c1", project: "p711", round: 2, t: 8, side: "client", author: "7-Eleven Brand Manager", text: "Please shorten opening scene", status: "open" },
+    { id: "c2", project: "p711", round: 2, t: 15, side: "client", author: "7-Eleven Marketing Exec", text: "Adjust product visibility", status: "open" },
+    { id: "c3", project: "p711", round: 2, t: 23, side: "leapup", author: "Leap Up Producer", text: "Music timing updated in R2", status: "resolved" },
+  ],
+  tasks: [
+    { id: "t1", project: "pgrab", name: "Creative Concept Development", owner: "leapup", due: "18 Nov", status: "in_progress" },
+    { id: "t2", project: "pgrab", name: "KOL Shortlist Submission", owner: "leapup", due: "19 Nov", status: "completed" },
+    { id: "t3", project: "pgrab", name: "Client Review & Feedback", owner: "client", due: "20 Nov", status: "pending_review" },
+    { id: "t4", project: "pgrab", name: "Production Timeline Approval", owner: "client", due: "21 Nov", status: "todo" },
+    { id: "t5", project: "p711", name: "Social Content Direction", owner: "leapup", due: "19 Nov", status: "in_progress" },
+    { id: "t6", project: "p711", name: "Creative Key Visual", owner: "leapup", due: "22 Nov", status: "todo" },
+    { id: "t7", project: "p711", name: "Client Feedback Round 01", owner: "client", due: "24 Nov", status: "pending_review" },
+  ],
+  actions: [
+    { id: "a1", project: "p711", title: "Video Round 2", area: "Outcome Development", desc: "3 timecoded comments to review", due: "Due: 20 Nov 2026, 17:00", target: "video" },
+    { id: "a2", project: "p711", title: "Character Option A", area: "Material Library", desc: "Select visual direction and approve", due: "Due: 21 Nov 2026, 17:00", target: "out" },
+    { id: "a3", project: "pgrab", title: "Creative Concept V1", area: "Project Detail", desc: "Review concept and share feedback", due: "Due: 23 Nov 2026, 17:00", target: "files" },
+  ],
+  timelines: {
+    p711: {
+      stages: [
+        { n: "01", status: "done", name: "Brief & Inputs", dates: "03–07 Nov" }, { n: "02", status: "client_review", name: "Script & Storyboard", dates: "10–21 Nov" },
+        { n: "03", status: "up_next", name: "AI Generation", dates: "24 Nov–03 Dec" }, { n: "04", status: "not_started", name: "Edit & Post", dates: "04–10 Dec" },
+        { n: "05", status: "not_started", name: "Delivery", dates: "11–15 Dec" },
+      ],
+      milestones: [
+        { name: "Brief sign-off", owner: "client", due: "07 Nov", status: "done" }, { name: "Script V2 approval", owner: "client", due: "19 Nov", status: "waiting" },
+        { name: "Storyboard approval", owner: "client", due: "21 Nov", status: "pending" }, { name: "Character & key visual lock", owner: "leapup", due: "25 Nov", status: "not_started" },
+        { name: "Video Round 1", owner: "leapup", due: "03 Dec", status: "not_started" }, { name: "Client feedback R1", owner: "client", due: "05 Dec", status: "not_started" },
+        { name: "Video Round 2", owner: "leapup", due: "09 Dec", status: "not_started" }, { name: "Final sign-off", owner: "client", due: "12 Dec", status: "not_started" },
+        { name: "Delivery", owner: "leapup", due: "15 Dec", status: "not_started" },
+      ],
+      inputs: [
+        { name: "Brand guideline", status: "received" }, { name: "Logo files", status: "received" }, { name: "Product packshots", status: "received" },
+        { name: "Key message & copy", status: "missing" }, { name: "Legal disclaimer", status: "missing" },
+      ],
+    },
+  },
+  approvals: {
+    p711: {
+      counts: { included: 2, used: 1, remaining: 1 },
+      approvers: [
+        { side: "CLIENT", title: "Brand Manager · Final approver" }, { side: "CLIENT", title: "Marketing Exec · Reviewer" },
+        { side: "LEAP UP", title: "Account · Consolidates feedback" }, { side: "LEAP UP", title: "Producer · Internal QC" },
+      ],
+      crs: [
+        { request: "Shorten opening scene", round: "R1", scope: "in", cost: "—", status: "done" },
+        { request: "Make store brighter", round: "R1", scope: "in", cost: "—", status: "done" },
+        { request: "Change main character", round: "R2", scope: "out", cost: "TBD", status: "quote_sent" },
+        { request: "Add 15s cutdown", round: "R2", scope: "out", cost: "TBD", status: "client_approved" },
+      ],
+      finalFile: "711_FILM_R2_V2.mp4",
+      checklist: ["Visuals, VO & music approved", "Mandatory copy & legal checked", "Delivery formats confirmed"],
+      checks: [false, false, false],
+      log: [
+        { event: "Brief approved", date: "07 Nov" }, { event: "Script V2 approved", date: "19 Nov" }, { event: "Storyboard V2 approved", date: "21 Nov" },
+        { event: "Round 1 feedback submitted", date: "05 Dec" },
+      ],
+      signedOff: null,
+    },
+  },
+};
+// sample passwords are all "demo" — stored only as a hash, never as typed text
+function pwHash(s){ let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return "h" + (h >>> 0).toString(36); }
+
+// ════ STATE STORE ════
+const DEFAULT_STATE = {
+  session: null,
+  users: structuredClone(DEMO.users),
+  pw: Object.fromEntries(DEMO.users.map(u => [u.id, pwHash("demo")])),
+  projects: structuredClone(DEMO.projects),
+  members: structuredClone(DEMO.members),
+  files: structuredClone(DEMO.files),
+  rounds: structuredClone(DEMO.rounds),
+  comments: structuredClone(DEMO.comments),
+  tasks: structuredClone(DEMO.tasks),
+  actions: structuredClone(DEMO.actions),
+  timelines: structuredClone(DEMO.timelines),
+  approvals: structuredClone(DEMO.approvals),
+  emails: [],
+  ui: { project: null, ptab: "files", folder: null, search: "", round: {}, membersProject: null, membersUser: null, denied: null },
+  sim: { uploadFail: null, playFail: false },
+  seq: 100,
+};
+const store = {
+  state: null,
+  load(){
+    Object.keys(localStorage).forEach(k => { if (k.startsWith("proto:portal:") && k !== STORE_KEY) localStorage.removeItem(k); });
+    try {
+      const r = localStorage.getItem(STORE_KEY);
+      this.state = r ? Object.assign(structuredClone(DEFAULT_STATE), JSON.parse(r)) : structuredClone(DEFAULT_STATE);
+      this.state.ui = Object.assign(structuredClone(DEFAULT_STATE.ui), this.state.ui || {});
+      this.state.sim = Object.assign(structuredClone(DEFAULT_STATE.sim), this.state.sim || {});
+    } catch { this.state = structuredClone(DEFAULT_STATE); }
+  },
+  save(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(this.state)); } catch {} },
+  update(patch){ Object.assign(this.state, patch); this.save(); },
+};
+store.load();
+const S = () => store.state;
+function commit(){ store.save(); renderSim(); }
+
+// ════ HELPERS ════
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ic = (n, cls) => '<svg' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true"><use href="#ic-' + n + '"/></svg>';
+const tbd = t => '<span class="tbd" title="' + esc(t || "Not stated in the quote or board — TBD") + '">TBD</span>';
+const pad2 = n => String(n).padStart(2, "0");
+const mmss = t => { t = Math.max(0, Math.floor(t)); return pad2(Math.floor(t / 60)) + ":" + pad2(t % 60); };
+function nextId(p){ S().seq++; return p + S().seq; }
+function me(){ return S().users.find(u => u.id === S().session) || null; }
+function isAdmin(){ const u = me(); return !!(u && u.admin); }
+function userName(id){ const u = S().users.find(x => x.id === id); return u ? u.name : id; }
+function roleIn(pid, uid){ uid = uid || S().session; const m = S().members.find(x => x.project === pid && x.user === uid); return m ? m.role : null; }
+function canSee(pid){ return isAdmin() || !!roleIn(pid); }
+function myProjects(){ return S().projects.filter(p => canSee(p.id)); }
+function mySide(pid){ if (isAdmin()) return "leapup"; return roleIn(pid) || (me() ? me().side : "client"); }
+function proj(){ return S().projects.find(p => p.id === S().ui.project) || null; }
+function projLine(p){ return esc(p.code) + (p.title ? " | " + esc(p.title) : ""); }
+function filePill(k){ const cls = k === "final" ? "solid" : k === "approved" ? "" : k === "in_review" ? "dash" : "soft"; return '<span class="pill ' + cls + '">' + (k === "final" || k === "approved" ? ic("check") : "") + esc(L.file[k]) + "</span>"; }
+function taskPill(k){ const cls = k === "completed" ? "solid" : k === "pending_review" ? "dash" : k === "todo" ? "soft" : ""; return '<span class="pill ' + cls + '">' + esc(L.task[k]) + "</span>"; }
+function opts(map, sel){ return Object.keys(map).map(k => '<option value="' + k + '"' + (k === sel ? " selected" : "") + ">" + esc(map[k]) + "</option>").join(""); }
+function crumbs(parts){ return '<div class="crumbs">' + parts.map(p => p[1] ? '<a href="#' + p[1] + '">' + esc(p[0]) + "</a>" : esc(p[0])).join(" / ") + "</div>"; }
+let toastTimer = null;
+function toast(msg){ const t = $("toast"); t.innerHTML = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 4000); }
+function busy(btn, label, ms, done){ // loading state for every submit (500–800 ms, deterministic)
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + esc(label);
+  setTimeout(() => { btn.disabled = false; btn.innerHTML = orig; done(); }, ms || 600);
+}
+function sendEmail(pid, toSide, subject){ // P2 email-notifications: outbox only
+  const p = S().projects.find(x => x.id === pid); if (!p) return;
+  const to = S().members.filter(m => m.project === pid && m.role === toSide).map(m => userName(m.user));
+  S().emails.unshift({ subject, project: p.code, to: to.length ? to.join(", ") : "no recipient", date: DEMO.today });
+}
+
+// ════ NAVIGATION ════
+let currentSlug = null;
+function goto(slug){ if (location.hash.slice(1) === slug) showScreen(slug); else location.hash = slug; }
+function showScreen(slug){
+  if (!slug || !SCREENS.includes(slug)) slug = DEFAULT_SCREEN;
+  if (!S().session && slug !== "login") slug = "login";
+  else if (S().session && slug === "login") slug = "projects";
+  if (slug === "denied" && !S().ui.denied) S().ui.denied = "project";
+  if (ADMIN_SCREENS.includes(slug) && !isAdmin()) { S().ui.denied = "admin"; slug = "denied"; }            // E-admin-003
+  if (PROJECT_SCREENS.includes(slug)) {
+    if (!proj() && myProjects().length) S().ui.project = myProjects()[0].id;
+    if (!myProjects().length) slug = "projects";
+    else if (!proj() || !canSee(proj().id)) { S().ui.denied = "project"; slug = "denied"; }                     // E-auth-access-003
+  }
+  stopPlayback();
+  document.querySelectorAll("[data-screen]").forEach(s => s.classList.remove("active"));
+  const t = document.querySelector('[data-screen="' + slug + '"]'); if (t) t.classList.add("active");
+  $("app-shell").classList.toggle("hidden", slug === "login");
+  if (ENTRY_SCREENS.includes(slug)) clearFormInputs(slug);
+  currentSlug = slug;
+  renderScreen(slug);
+  renderSide();
+  document.querySelectorAll(".toc-link").forEach(a => a.classList.toggle("active", a.dataset.goto === slug));
+  window.scrollTo(0, 0);
+  store.save();
+}
+window.addEventListener("hashchange", () => showScreen(location.hash.slice(1)));
+
+function clearFormInputs(slug){
+  const section = document.querySelector('[data-screen="' + slug + '"]'); if (!section) return;
+  section.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], textarea').forEach(el => { el.value = ""; delete el.dataset.touched; el.setAttribute("aria-invalid", "false"); });
+  section.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => el.checked = false);
+  section.querySelectorAll(".banner").forEach(el => el.classList.remove("show"));
+  section.querySelectorAll(".err-inline").forEach(el => el.classList.remove("show"));
+  delete section.dataset.submitted;
+}
+function markFieldTouched(el){ el.dataset.touched = "1"; }
+function isFieldTouched(el){ return el.dataset.touched === "1"; }
+function setFieldError(inputEl, errorEl, show){
+  if (errorEl) errorEl.classList.toggle("show", !!show);
+  inputEl.setAttribute("aria-invalid", show ? "true" : "false");
+  if (errorEl && errorEl.id) inputEl.setAttribute("aria-describedby", errorEl.id);
+}
+function bindRequired(inputId, errId){ // pristine → touched (blur) → revalidate on input
+  const el = $(inputId), err = $(errId);
+  el.addEventListener("blur", () => { markFieldTouched(el); setFieldError(el, err, !el.value.trim()); });
+  el.addEventListener("input", () => { if (isFieldTouched(el)) setFieldError(el, err, !el.value.trim()); });
+}
+function validateRequired(pairs){ let ok = true; pairs.forEach(([i, e]) => { const el = $(i); markFieldTouched(el); const bad = !el.value.trim(); setFieldError(el, $(e), bad); if (bad && ok) el.focus(); if (bad) ok = false; }); return ok; }
+function openModal(el){
+  const cur = document.querySelector("[data-screen].active");
+  el.setAttribute("data-theme", cur ? (cur.getAttribute("data-theme") || "light") : "light");
+  if (el.showModal) el.showModal(); else el.setAttribute("open", "");
+}
+function closeDlg(id){ const d = $(id); if (d.close) d.close(); else d.removeAttribute("open"); }
+
+// ════ FLOATING PANEL ════
+function togglePanel(force){ const p = $("proto-panel"); const open = force === undefined ? !p.classList.contains("open") : force; p.classList.toggle("open", open); if (open) renderSim(); }
+function switchPane(name, btn){
+  document.querySelectorAll(".proto-tab").forEach(t => t.classList.remove("active")); btn.classList.add("active");
+  ["toc", "flow", "sim"].forEach(n => $("pane-" + n).classList.toggle("active", n === name));
+}
+document.querySelectorAll("[data-goto]").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault(); togglePanel(false);
+  const slug = a.dataset.goto;
+  if (a.dataset.as) signInAs(a.dataset.as, true);
+  else if (!S().session && slug !== "login") signInAs(ADMIN_SCREENS.includes(slug) ? "admin" : "account.leapup", true);
+  if (slug === "login" && S().session) signOut(true);
+  if (a.dataset.project && canSee(a.dataset.project)) { S().ui.project = a.dataset.project; S().ui.ptab = "files"; S().ui.folder = null; S().ui.search = ""; }
+  if (PROJECT_SCREENS.includes(slug) && !a.dataset.project && myProjects().some(p => p.id === "p711")) S().ui.project = "p711";
+  if (a.dataset.round && S().ui.project) S().ui.round[S().ui.project] = Number(a.dataset.round);
+  if (a.dataset.sim === "network") S().sim.uploadFail = "network";
+  if (a.dataset.sim === "play") S().sim.playFail = true;
+  if (slug === "denied") S().ui.denied = "admin";
+  goto(slug);
+  if (a.dataset.open === "upload") openUpload();
+  commit();
+}));
+document.addEventListener("keydown", e => { if (e.key === "Escape") togglePanel(false); });
+
+function renderSim(){
+  $("sim-users").innerHTML = S().users.map(u => {
+    const n = S().members.filter(m => m.user === u.id).length;
+    const role = u.admin ? "Admin (Leap Up)" : (L.side[u.side] + " · " + n + " project" + (n === 1 ? "" : "s"));
+    return '<div class="sim-row"><div class="who">' + esc(u.id) + "<small>" + esc(u.name) + " · " + esc(role) + "</small></div>" +
+      '<button class="sim-btn' + (S().session === u.id ? " on" : "") + '" onclick="signInAs(\'' + esc(u.id) + '\')">' + (S().session === u.id ? "Signed in" : "Sign in as") + "</button></div>";
+  }).join("");
+  const f = S().sim;
+  $("sim-fail").innerHTML =
+    '<div class="sim-row"><div class="who">Next upload: file type or size not allowed</div><button class="sim-btn' + (f.uploadFail === "type" ? " on" : "") + '" onclick="armSim(\'type\')">' + (f.uploadFail === "type" ? "Armed" : "Arm") + "</button></div>" +
+    '<div class="sim-row"><div class="who">Next upload: storage or network failure</div><button class="sim-btn' + (f.uploadFail === "network" ? " on" : "") + '" onclick="armSim(\'network\')">' + (f.uploadFail === "network" ? "Armed" : "Arm") + "</button></div>" +
+    '<div class="sim-row"><div class="who">Next video playback fails</div><button class="sim-btn' + (f.playFail ? " on" : "") + '" onclick="armSim(\'play\')">' + (f.playFail ? "Armed" : "Arm") + "</button></div>";
+  $("sim-mail").innerHTML = S().emails.length ? S().emails.slice(0, 12).map(m => '<div class="sim-mail"><b>' + esc(m.subject) + "</b>Project " + esc(m.project) + " · to " + esc(m.to) + " · " + esc(m.date) + "</div>").join("") : '<p class="sim-note">No e-mail yet. Upload a version, post a comment or approve to see one.</p>';
+}
+function armSim(k){
+  const f = S().sim;
+  if (k === "play") f.playFail = !f.playFail; else f.uploadFail = f.uploadFail === k ? null : k;
+  commit();
+}
+function signInAs(uid, silent){
+  S().session = uid; const ps = myProjects();
+  S().ui.project = ps.length ? ps[0].id : null; S().ui.ptab = "files"; S().ui.folder = null; S().ui.search = ""; S().ui.denied = null;
+  commit();
+  if (!silent) { togglePanel(false); goto("projects"); toast("Signed in as " + esc(userName(uid))); }
+}
+function signOut(silent){ stopPlayback(); S().session = null; S().ui.project = null; S().ui.denied = null; commit(); if (!silent) goto("login"); }
+
+// ════ RESET (safe) ════
+function resetPrototypeData(){
+  if (!confirm("Delete all demo data and start fresh? This cannot be undone.")) return;
+  localStorage.removeItem(STORE_KEY);
+  store.state = structuredClone(DEFAULT_STATE);
+  history.replaceState(null, "", location.pathname + location.search);
+  location.reload();
+}
+
+// ════ SIDEBAR ════
+function renderSide(){
+  const u = me(); if (!u) { $("side").innerHTML = ""; return; }
+  const p = proj(); const s = currentSlug;
+  const nav = (slug, icon, label, active) => '<button class="nav' + (active ? " active" : "") + '" onclick="' + slug + '">' + ic(icon) + esc(label) + "</button>";
+  let h = '<div class="brand">LEAP UP<small>CLIENT PROJECT PORTAL</small></div>';
+  h += nav("goto('home')", "home", "Dashboard", s === "home" || s === "tasks");
+  h += nav("goto('projects')", "grid", "Projects", s === "projects");
+  h += nav("filesNav()", "file", "Files", false).replace("Files</button>", "Files " + tbd("Target of Files is TBD (project-files OQ-2)") + "</button>");
+  if (p && canSee(p.id) && PROJECT_SCREENS.includes(s)) {
+    h += '<div class="nav-h">' + esc(p.code) + " · PROJECT</div>";
+    h += nav("openProject('" + p.id + "')", "folder", "Project Files", s === "project");
+    h += nav("goto('video-review')", "video", "Outcome Review", s === "video-review");
+    h += nav("goto('timeline')", "clock", "Timeline", s === "timeline");
+    h += nav("goto('signoff')", "check", "Revision & Sign-off", s === "signoff");
+  }
+  if (isAdmin()) { h += '<div class="nav-h">Leap Up</div>' + nav("goto('admin-home')", "users", "Admin", ADMIN_SCREENS.includes(s)); }
+  h += '<div class="side-foot"><div class="u">' + esc(u.name) + '</div><div class="r">' + (u.admin ? "Admin" : esc(L.side[u.side])) + "</div>" +
+       '<button class="nav" onclick="signOut()">' + ic("out") + "Sign out " + tbd("Placement and wording of Sign out TBD (auth-access OQ-2)") + "</button></div>";
+  $("side").innerHTML = h;
+}
+function filesNav(){ toast("The Files page is on the board but not designed. Target TBD (project-files OQ-2)."); }
+
+// ════ RENDER ════
+function renderScreen(slug){
+  const r = { login: renderLogin, projects: renderProjects, denied: renderDenied, home: renderHome, tasks: renderTasks, project: renderProject,
+    "video-review": renderVideo, timeline: renderTimeline, signoff: renderSignoff, "admin-home": renderAdmin, "project-form": () => {}, "account-form": () => {}, members: renderMembers }[slug];
+  if (r) r();
+}
+function sec(slug){ return document.querySelector('[data-screen="' + slug + '"]'); }
+
+// ── Login (FR-auth-access-001…005)
+function renderLogin(){ $("login-pw").type = "password"; $("login-show").textContent = "Show"; }
+function togglePw(){ const el = $("login-pw"); const show = el.type === "password"; el.type = show ? "text" : "password"; $("login-show").textContent = show ? "Hide" : "Show"; }
+function doLogin(e){
+  e.preventDefault();
+  const idEl = $("login-id"), pwEl = $("login-pw"), banner = $("login-banner");
+  banner.classList.remove("show");
+  if (!validateRequired([["login-id", "login-id-err"], ["login-pw", "login-pw-err"]])) return; // E-auth-access-002
+  busy($("login-submit"), "Signing in…", 700, () => {
+    const id = idEl.value.trim().toLowerCase();                                                     // FR-auth-access-005 not case-sensitive
+    const u = S().users.find(x => x.id.toLowerCase() === id);
+    if (!u || S().pw[u.id] !== pwHash(pwEl.value)) {                                                // E-auth-access-001
+      banner.innerHTML = "User ID or password is incorrect. Check them or contact Leap Up. " + tbd("Wording TBD (spec OQ-6). Lockout TBD (OQ-3).");
+      banner.classList.add("show"); pwEl.value = ""; pwEl.focus(); return;
+    }
+    S().session = u.id; const ps = myProjects(); S().ui.project = ps.length ? ps[0].id : null; S().ui.denied = null;
+    commit(); goto("projects");
+  });
+}
+
+// ── My projects (landing, FR-auth-access-006…008)
+function renderProjects(){
+  const ps = myProjects();
+  let h = '<h1 class="page">My projects ' + tbd("Which page users land on after sign-in is TBD (auth-access OQ-1)") + "</h1>";
+  h += '<p class="sub">' + (isAdmin() ? "As Admin you see every project." : "Only projects you are assigned to are shown.") + "</p>";
+  if (!ps.length) {                                                                                  // E-auth-access-004
+    h += '<div class="card empty" style="margin-top:18px">' + ic("lock") + "<b>You have no project yet.</b><br>Leap Up will add you to your project. Contact your Leap Up account manager. " + tbd("Wording TBD") + "</div>";
+  } else {
+    h += '<div class="grid" style="margin-top:18px">' + ps.map(p =>
+      '<button class="card folder" onclick="openProject(\'' + p.id + '\')"><b>' + ic("folder") + esc(p.code) + '</b><span>' + (p.title ? esc(p.title) + "<br>" : "") + "Client: " + esc(p.client) + " | Due: " + esc(p.due || "TBD") + '</span><span style="margin-top:8px"><span class="pill">' + esc(p.status) + "</span> " + (isAdmin() ? "" : '<span class="pill soft">' + esc(L.side[roleIn(p.id)]) + "</span>") + "</span></button>").join("") + "</div>";
+  }
+  sec("projects").innerHTML = h;
+}
+function openProject(pid){ S().ui.project = pid; S().ui.ptab = "files"; S().ui.folder = null; S().ui.search = ""; commit(); goto("project"); }
+
+function renderDenied(){
+  const admin = S().ui.denied === "admin";
+  sec("denied").innerHTML = '<div class="card empty" style="margin-top:40px">' + ic("lock") + "<b>You don't have access to this page.</b><br>" +
+    (admin ? "Only a Leap Up Admin can open the admin page." : "You can only open projects you are assigned to.") + " " + tbd("Wording TBD") +
+    '<br><br><button class="btn" onclick="goto(\'projects\')">Back to my projects</button></div>';
+}
+
+// ── Project Files (FR-project-files-001…014)
+function renderProject(){
+  const p = proj(); const tab = S().ui.ptab || "files";
+  let h = crumbs([["Projects", "projects"], [p.code]]);
+  h += '<h1 class="page">' + esc(p.code) + ' <span class="pill">' + esc(p.status) + "</span></h1>";
+  h += '<p class="sub">Client: ' + esc(p.client) + " | Due: " + esc(p.due || "TBD") + "</p>";
+  h += '<div class="tabs">' + [["files", "Project Files"], ["tasks", "Task List"], ["info", "Project Info"]].map(t =>
+    '<button class="tab' + (tab === t[0] ? " active" : "") + '" aria-pressed="' + (tab === t[0]) + '" onclick="setPtab(\'' + t[0] + '\')">' + t[1] + "</button>").join("") + "</div>";
+  if (tab === "files") {
+    h += '<div class="grid" style="margin-top:16px">' + FOLDERS.map(f => {
+      const n = S().files.filter(x => x.project === p.id && x.folder === f.key).length;
+      return '<button class="card folder' + (S().ui.folder === f.key ? " active" : "") + '" aria-pressed="' + (S().ui.folder === f.key) + '" onclick="setFolder(\'' + f.key + '\')" data-cmt="project.folder-' + f.key + '"><b>' + ic("folder") + esc(f.name) + '</b><span>' + esc(f.lines[0]) + "<br>" + esc(f.lines[1]) + '</span><span style="margin-top:6px">' + n + " file" + (n === 1 ? "" : "s") + "</span></button>";
+    }).join("") + "</div>";
+    h += '<div class="section-h">Files' + (S().ui.folder ? " · " + esc(FOLDERS.find(f => f.key === S().ui.folder).name) + ' <button class="text-link" style="text-transform:none;letter-spacing:0" onclick="setFolder(null)">Show all</button>' : "") + "</div>";
+    h += '<div class="row" style="margin-bottom:10px"><label class="search" for="file-search"><span class="lbl" style="position:absolute;left:-9999px">Search files</span>' + ic("search") +
+         '<input class="input" id="file-search" type="search" placeholder="Search files..." value="' + esc(S().ui.search) + '" oninput="setSearch(this.value)"></label><span class="spacer"></span>' +
+         '<button class="btn btn-primary" onclick="openUpload()" data-cmt="project.upload">' + ic("upload") + "Upload Files</button></div>";
+    h += '<div id="file-table"></div>';
+  } else if (tab === "tasks") {
+    h += '<div style="margin-top:16px">' + taskTable(p.id, false) + '</div><p class="sub" style="margin-top:10px">Phase 2 tab. <button class="text-link" onclick="goto(\'tasks\')">Open the task list</button></p>';
+  } else {
+    h += '<div class="card empty" style="margin-top:16px"><b>Project Info</b><br>Content not defined in the quote or board. ' + tbd("Open item C7 (project-files OQ-1)") + "</div>";
+  }
+  sec("project").innerHTML = h;
+  if (tab === "files") renderFileTable();
+}
+function setPtab(t){ S().ui.ptab = t; commit(); renderProject(); }
+function setFolder(k){ S().ui.folder = S().ui.folder === k ? null : k; commit(); renderProject(); }
+function setSearch(v){ S().ui.search = v; store.save(); renderFileTable(); }
+function renderFileTable(){
+  const p = proj(); const q = S().ui.search.trim().toLowerCase(); const fk = S().ui.folder;
+  const all = S().files.filter(f => f.project === p.id && (!fk || f.folder === fk));
+  const rows = all.filter(f => !q || f.name.toLowerCase().includes(q));
+  let h;
+  if (!rows.length) {
+    h = '<div class="table-wrap"><div class="empty">' + ic("search") + (q ? "<b>No file matches “" + esc(S().ui.search) + "”.</b><br>Try another search. " : "<b>No files in this folder yet.</b><br>Upload the first file. ") + tbd("Wording TBD") + "</div></div>"; // E-project-files-002 / 004
+  } else {
+    h = '<div class="table-wrap"><table class="t"><thead><tr><th>Name</th><th>Folder</th><th>Last Modified</th><th>Uploaded By</th><th>Status ' + tbd("Who sets the status is TBD (project-files OQ-5)") + '</th><th><span style="position:absolute;left:-9999px">Download</span></th></tr></thead><tbody>' +
+      rows.map(f => {
+        const isVideo = /\.(mp4|mov)$/i.test(f.name) && f.folder === "outcome";
+        return "<tr><td>" + (isVideo ? '<button class="text-link" onclick="openVideoFromFile()">' + ic("video") + " " + esc(f.name) + "</button>" : '<button class="text-link" onclick="previewFile()">' + esc(f.name) + "</button>") + "</td><td>" +
+          esc(FOLDERS.find(x => x.key === f.folder).name) + "</td><td>" + esc(f.date) + "</td><td>" + esc(L.side[f.by]) + "</td><td>" + filePill(f.status) +
+          '</td><td><button class="icon-btn" title="Download" aria-label="Download ' + esc(f.name) + '" onclick="downloadFile(\'' + f.id + '\')">' + ic("download") + "</button></td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+  $("file-table").innerHTML = h;
+}
+function previewFile(){ toast("Opening or previewing a non-video file is TBD (project-files OQ-8)."); }
+function openVideoFromFile(){ goto("video-review"); }
+function downloadFile(id){ const f = S().files.find(x => x.id === id); toast("Downloading " + esc(f.name) + " (prototype: no real file). Control placement TBD."); }
+
+let pendingUpload = [], uploadPick = 0;
+function openUpload(){
+  const p = proj(); if (!p) return;
+  pendingUpload = [];
+  $("up-folder").innerHTML = FOLDERS.map(f => '<option value="' + f.key + '"' + (f.key === (S().ui.folder || "proposal") ? " selected" : "") + ">" + esc(f.name) + "</option>").join("");
+  $("up-banner").classList.remove("show"); $("up-err").classList.remove("show");
+  renderUploadList(); openModal($("dlg-upload"));
+}
+function pickUploadFile(){
+  const p = proj(); const base = SAMPLE_UPLOADS[uploadPick % SAMPLE_UPLOADS.length]; uploadPick++;
+  pendingUpload.push(p.code.replace(/\s+/g, "") + "_" + base); $("up-err").classList.remove("show"); renderUploadList();
+}
+function renderUploadList(){
+  $("up-list").innerHTML = pendingUpload.length ? pendingUpload.map((n, i) => '<div class="chip">' + ic("file") + '<span style="flex:1">' + esc(n) + '</span><button type="button" class="text-link" onclick="pendingUpload.splice(' + i + ',1);renderUploadList()">Remove</button></div>').join("") : '<p class="sub">No file chosen.</p>';
+}
+function closeUpload(){ if (pendingUpload.length && !confirm("Discard the chosen files?")) return; pendingUpload = []; closeDlg("dlg-upload"); }
+function doUpload(e){
+  e.preventDefault();
+  $("up-banner").classList.remove("show");
+  if (!pendingUpload.length) { $("up-err").classList.add("show"); return; }
+  busy($("up-submit"), "Uploading…", 800, () => {
+    const fail = S().sim.uploadFail;
+    if (fail) {                                                                                      // E-project-files-001 / 003
+      S().sim.uploadFail = null; commit();
+      $("up-banner").innerHTML = (fail === "type" ? "This file type or size is not allowed. Choose another file." : "The upload failed. Check your connection and try again.") + " " + tbd("Wording TBD; limits TBD (OQ-4)");
+      $("up-banner").classList.add("show"); return;
+    }
+    const p = proj(); const folder = $("up-folder").value; const side = mySide(p.id);
+    pendingUpload.forEach(n => S().files.unshift({ id: nextId("f"), project: p.id, name: n, folder, date: DEMO.today, by: side, status: "shared" }));
+    const count = pendingUpload.length; pendingUpload = [];
+    S().ui.folder = folder; S().ui.search = ""; commit(); closeDlg("dlg-upload"); renderProject();
+    toast(count + " file" + (count === 1 ? "" : "s") + " uploaded to " + esc(FOLDERS.find(f => f.key === folder).name) + ". Status set to Shared (rule TBD).");
+  });
+}
+
+// ── Video Review (FR-video-review-001…015)
+let player = { t: 0, playing: false, timer: null, muted: false, err: false, focus: null };
+function rounds(){ const p = proj(); if (!S().rounds[p.id]) S().rounds[p.id] = [{ n: 1, status: "upcoming", date: null, video: null, change: "", line: "Not started" }]; return S().rounds[p.id]; }
+function currentRoundN(){
+  const rs = rounds(); const sel = S().ui.round[proj().id];
+  if (sel && rs.some(r => r.n === sel)) return sel;
+  const ir = rs.find(r => r.status === "in_review"); if (ir) return ir.n;
+  const withVid = rs.filter(r => r.video); return withVid.length ? withVid[withVid.length - 1].n : rs[0].n;
+}
+function renderVideo(){
+  const p = proj(); const rs = rounds(); const n = currentRoundN(); const r = rs.find(x => x.n === n);
+  const leap = mySide(p.id) === "leapup";
+  let h = crumbs([["Projects", "projects"], [p.code, "project"], ["Outcome Development"], ["Video Review"]]);
+  h += '<h1 class="page">Video Review <span class="pill">Round ' + n + "</span></h1>";
+  h += '<p class="sub"><b>' + projLine(p) + "</b><br>Review video, pin feedback to exact timecodes, and track revisions</p>";
+  h += '<div class="vr"><div><div class="section-h" style="margin-top:0">Version history</div><div class="rounds">' + rs.map(x =>
+      '<button class="card round' + (x.n === n ? " active" : "") + '" aria-pressed="' + (x.n === n) + '" onclick="selectRound(' + x.n + ')"><b>Round ' + x.n + (x.approved ? " " + ic("check") : "") + "</b><span>" + esc(L.round[x.status]) + " | " + esc(x.date || "Pending") + "</span></button>").join("") + "</div>";
+  if (leap) h += '<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openVersion()">' + ic("plus") + "Add new version</button>";
+  h += '</div><div><div class="player-file">VIDEO PREVIEW / ' + esc(r.video || "no video yet") + '</div><div id="vr-frame"></div><div id="vr-track" class="track" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="' + DURATION + '" aria-valuenow="0" aria-valuetext="00:00" onclick="seekFromTrack(event)" onkeydown="seekKey(event)"></div>' +
+       '<div class="controls"><button class="icon-btn" id="vr-play" onclick="togglePlay()" aria-label="Play">' + ic("play") + '</button><span id="vr-time" style="font-family:ui-monospace,Consolas,monospace">00:00 / ' + mmss(DURATION) + '</span><span class="spacer"></span>' +
+       '<button class="icon-btn" onclick="toggleMute()" id="vr-vol" aria-label="Volume">' + ic(player.muted ? "mute" : "vol") + 'Volume</button><button class="icon-btn" onclick="toast(\'Fullscreen is not simulated in the prototype.\')">' + ic("full") + "Fullscreen</button></div>";
+  h += '<form class="add-c" novalidate onsubmit="addComment(event)"><label for="vr-comment"><span class="lbl" style="position:absolute;left:-9999px">Comment</span><input class="input" id="vr-comment" type="text" aria-invalid="false" maxlength="1000" ' + (r.video ? "" : "disabled") + ' data-cmt="video-review.comment">' +
+       '<span class="err-inline" id="vr-comment-err">Type a comment first. ' + tbd("Wording TBD") + '</span></label><button class="btn btn-primary" id="vr-post" title="Submit control not drawn on the board (TBD)" ' + (r.video ? "" : "disabled") + ">Add</button></form>";
+  h += '<div class="row" style="margin-top:12px"><button class="btn btn-ghost btn-sm" id="vr-approve" onclick="approveVersion()" ' + (r.video && !r.approved ? "" : "disabled") + ">" + ic("check") + (r.approved ? "Version approved" : "Approve this version") + "</button>" + tbd("Location of version approval TBD (outcome-approval OQ-1); approvers OPEN C4") + '</div><div class="banner err" id="vr-approve-err" role="alert" style="margin-top:8px"></div>';
+  h += '</div><div><div class="section-h" style="margin-top:0">Timecode comments</div><div id="vr-comments"></div></div></div>';
+  h += '<div class="section-h">Round change log ' + tbd("Who edits the change log is TBD (video-review OQ-5)") + '</div><div class="card">' + rs.map(x =>
+       '<div class="log-row"><b>Round ' + x.n + "</b><div>" + esc(x.change || "—") + "<span>" + esc(x.line || "") + "</span></div></div>").join("") + "</div>";
+  sec("video-review").innerHTML = h;
+  player.t = Math.min(player.t, DURATION); player.err = false;
+  renderFrame(); renderTrack(); renderComments(); updateTime();
+}
+function roundComments(){ const p = proj(); const n = currentRoundN(); return S().comments.filter(c => c.project === p.id && c.round === n).sort((a, b) => a.t - b.t); }
+function renderFrame(){
+  const r = rounds().find(x => x.n === currentRoundN());
+  let h;
+  if (!r.video) h = '<div class="frame">' + ic("video") + "NO VIDEO IN THIS ROUND YET<br><span style=\"letter-spacing:0\">Leap Up has not shared a version for Round " + r.n + ". " + tbd("Wording TBD") + "</span></div>";                 // E-video-review-004
+  else if (player.err) h = '<div class="frame">' + ic("alert") + "THIS VIDEO CAN'T BE PLAYED RIGHT NOW<br><span style=\"letter-spacing:0\">" + tbd("Wording TBD") + '</span><button class="btn btn-sm" id="vr-retry" onclick="retryPlay()">Retry</button></div>';    // E-video-review-002
+  else h = '<div class="frame">' + ic("video") + 'VIDEO FRAME<br><span style="letter-spacing:0">30-second campaign film</span></div>';
+  $("vr-frame").innerHTML = h;
+}
+function renderTrack(){
+  const cs = roundComments();
+  $("vr-track").innerHTML = '<div class="bar"></div><div class="fill" id="vr-fill"></div>' + cs.map(c =>
+    '<button class="marker' + (c.status === "resolved" ? " resolved" : "") + '" style="left:' + (c.t / DURATION * 100) + '%" onclick="event.stopPropagation();jumpTo(\'' + c.id + '\')" aria-label="Comment at ' + mmss(c.t) + '"><i></i><small>' + mmss(c.t) + "</small></button>").join("");
+}
+function renderComments(){
+  const cs = roundComments(); const n = currentRoundN();
+  let h = '<p class="sub" style="margin-bottom:8px">' + cs.length + " comment" + (cs.length === 1 ? "" : "s") + " | Round " + n + "</p>";
+  if (!cs.length) h += '<div class="card empty">No comments in this round yet. ' + tbd("Wording TBD") + "</div>";                // E-video-review-003
+  h += cs.map(c => '<div class="card cmt' + (player.focus === c.id ? " focus" : "") + '" id="cmt-' + c.id + '"><div class="cmt-top"><button class="tc" onclick="jumpTo(\'' + c.id + '\')">' + mmss(c.t) + "</button><b style=\"font-size:12px\">" + esc(L.side[c.side]) + '</b><span class="spacer"></span><span class="pill ' + (c.status === "resolved" ? "solid" : "dash") + '">' + (c.status === "resolved" ? "Resolved" : "Open") + "</span></div><p>" + esc(c.text) + '</p><div class="row" style="margin-top:6px"><span class="by">' + esc(c.author || "") + "</span><span class=\"spacer\"></span>" +
+    (c.status === "open" ? '<button class="text-link" style="font-size:12px" onclick="resolveComment(\'' + c.id + '\')">Mark resolved</button>' + tbd("Who may resolve is TBD (video-review OQ-2)") : "") + "</div></div>").join("");
+  $("vr-comments").innerHTML = h;
+}
+function updateTime(){
+  const t = $("vr-time"); if (!t) return;
+  t.textContent = mmss(player.t) + " / " + mmss(DURATION);
+  const f = $("vr-fill"); if (f) f.style.width = (player.t / DURATION * 100) + "%";
+  const tr = $("vr-track"); if (tr) { tr.setAttribute("aria-valuenow", Math.floor(player.t)); tr.setAttribute("aria-valuetext", mmss(player.t)); }
+  const c = $("vr-comment"); if (c) c.placeholder = "Add comment at " + mmss(player.t) + "...";
+  const b = $("vr-play"); if (b) { b.innerHTML = ic(player.playing ? "pause" : "play"); b.setAttribute("aria-label", player.playing ? "Pause" : "Play"); }
+}
+function togglePlay(){
+  const r = rounds().find(x => x.n === currentRoundN()); if (!r.video || player.err) return;
+  if (player.playing) { stopPlayback(); updateTime(); return; }
+  if (S().sim.playFail) { S().sim.playFail = false; commit(); player.err = true; renderFrame(); return; }   // E-video-review-002
+  if (player.t >= DURATION) player.t = 0;
+  player.playing = true;
+  player.timer = setInterval(() => { player.t = Math.min(DURATION, player.t + 0.25); if (player.t >= DURATION) stopPlayback(); updateTime(); }, 250);
+  updateTime();
+}
+function stopPlayback(){ player.playing = false; if (player.timer) { clearInterval(player.timer); player.timer = null; } }
+function retryPlay(){ busy($("vr-retry"), "Retrying…", 600, () => { player.err = false; renderFrame(); }); }
+function toggleMute(){ player.muted = !player.muted; $("vr-vol").innerHTML = ic(player.muted ? "mute" : "vol") + "Volume"; }
+function seekFromTrack(e){ const r = rounds().find(x => x.n === currentRoundN()); if (!r.video) return; const b = $("vr-track").getBoundingClientRect(); player.t = Math.max(0, Math.min(DURATION, Math.round((e.clientX - b.left) / b.width * DURATION))); updateTime(); }
+function seekKey(e){ const r = rounds().find(x => x.n === currentRoundN()); if (!r.video) return; const d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (e.key === "Home") player.t = 0; else if (e.key === "End") player.t = DURATION; else if (d) player.t = Math.max(0, Math.min(DURATION, Math.floor(player.t) + d)); else return; e.preventDefault(); updateTime(); }
+function jumpTo(id){ const c = S().comments.find(x => x.id === id); if (!c) return; player.t = c.t; player.focus = id; updateTime(); renderComments(); }
+function selectRound(n){ stopPlayback(); S().ui.round[proj().id] = n; player.t = 0; player.focus = null; commit(); renderVideo(); }
+function addComment(e){
+  e.preventDefault();
+  const el = $("vr-comment"), err = $("vr-comment-err");
+  markFieldTouched(el);
+  if (!el.value.trim()) { setFieldError(el, err, true); return; }                                    // E-video-review-001
+  setFieldError(el, err, false);
+  const p = proj(); const t = Math.floor(player.t); const text = el.value.trim(); const side = mySide(p.id);
+  busy($("vr-post"), "Posting…", 500, () => {
+    const c = { id: nextId("c"), project: p.id, round: currentRoundN(), t, side, author: me().name, text, status: "open" };
+    S().comments.push(c); player.focus = c.id;
+    sendEmail(p.id, side === "client" ? "leapup" : "client", "New comment at " + mmss(t) + " — Round " + c.round);
+    commit(); el.value = ""; delete el.dataset.touched; el.setAttribute("aria-invalid", "false");
+    renderTrack(); renderComments(); updateTime(); toast("Comment pinned at " + mmss(t) + ".");
+  });
+}
+(function bindCommentInput(){ document.addEventListener("input", e => { if (e.target && e.target.id === "vr-comment" && isFieldTouched(e.target)) setFieldError(e.target, $("vr-comment-err"), !e.target.value.trim()); }); })();
+function resolveComment(id){ const c = S().comments.find(x => x.id === id); c.status = "resolved"; commit(); renderTrack(); renderComments(); }
+function approveVersion(){
+  const p = proj(); const r = rounds().find(x => x.n === currentRoundN()); const err = $("vr-approve-err");
+  err.classList.remove("show");
+  busy($("vr-approve"), "Approving…", 600, () => {
+    if (mySide(p.id) !== "client") {                                                                 // E-outcome-approval-001
+      err.innerHTML = "You can't approve this version. Approval is made by the client. " + tbd("Who may approve is OPEN C4; wording TBD"); err.classList.add("show"); return;
+    }
+    r.approved = { by: me().name, date: DEMO.todayShort };
+    approval(p.id).log.push({ event: "Round " + r.n + " version approved by " + me().name, date: DEMO.todayShort });
+    sendEmail(p.id, "leapup", "Round " + r.n + " version approved");
+    commit(); renderVideo(); toast("Round " + r.n + " version approved. Logged in the Approval Log.");
+  });
+}
+let pendingVersion = null, versionPick = 0;
+function openVersion(){
+  const rs = rounds(); const cur = rs.find(r => r.status === "in_review");
+  const nextR = rs.find(r => r.status === "upcoming"); const nextN = nextR ? nextR.n : rs[rs.length - 1].n + 1;
+  let o = "";
+  if (cur) o += '<option value="same">Round ' + cur.n + " — new version of the round in review</option>";
+  o += '<option value="next">Round ' + nextN + " — start this round</option>";
+  $("nv-target").innerHTML = o; pendingVersion = null; $("nv-err").classList.remove("show"); renderVersionFile(); openModal($("dlg-version"));
+}
+function pickVersionFile(){
+  const p = proj(); const rs = rounds(); const target = $("nv-target").value;
+  const cur = rs.find(r => r.status === "in_review"); const nextR = rs.find(r => r.status === "upcoming");
+  const n = target === "same" && cur ? cur.n : (nextR ? nextR.n : rs[rs.length - 1].n + 1);
+  versionPick++; pendingVersion = p.code.replace(/\s+/g, "") + "_FILM_R" + n + "_V0" + versionPick + ".mp4"; $("nv-err").classList.remove("show"); renderVersionFile();
+}
+function renderVersionFile(){ $("nv-file").innerHTML = pendingVersion ? '<div class="chip">' + ic("video") + esc(pendingVersion) + "</div>" : '<p class="sub">No video chosen.</p>'; }
+function doNewVersion(e){
+  e.preventDefault();
+  if (!pendingVersion) { $("nv-err").classList.add("show"); return; }
+  busy($("nv-submit"), "Uploading…", 800, () => {
+    const p = proj(); const rs = rounds(); const target = $("nv-target").value; let r;
+    const cur = rs.find(x => x.status === "in_review");
+    if (target === "same" && cur) { r = cur; r.video = pendingVersion; r.date = DEMO.todayShort; r.approved = null; }
+    else {
+      if (cur) { cur.status = "reviewed"; }                                                          // BR-video-review-003 one round in review
+      r = rs.find(x => x.status === "upcoming");
+      if (!r) { r = { n: rs[rs.length - 1].n + 1, status: "upcoming", date: null, video: null, change: "", line: "" }; rs.push(r); }
+      r.status = "in_review"; r.date = DEMO.todayShort; r.video = pendingVersion; r.line = r.line === "Not started" ? "In review" : r.line;
+    }
+    S().files.unshift({ id: nextId("f"), project: p.id, name: pendingVersion, folder: "outcome", date: DEMO.today, by: "leapup", status: "in_review" });
+    sendEmail(p.id, "client", "New video ready for review — Round " + r.n);
+    S().ui.round[p.id] = r.n; pendingVersion = null; player.t = 0;
+    commit(); closeDlg("dlg-version"); renderVideo(); toast("Round " + r.n + " is now In Review.");
+  });
+}
+
+// ── Tasks (P2, FR-dashboard-tasks-004…007)
+function taskTable(pid, editable){
+  const ts = S().tasks.filter(t => t.project === pid);
+  if (!ts.length) return '<div class="table-wrap"><div class="empty">No tasks yet.</div></div>';
+  return '<div class="table-wrap"><table class="t"><thead><tr><th>Task</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>' + ts.map(t =>
+    "<tr><td>" + esc(t.name) + "</td><td>" + (editable ? '<select class="select" aria-label="Owner" onchange="setTask(\'' + t.id + '\',\'owner\',this.value)">' + opts(L.side, t.owner) + "</select>" : esc(L.side[t.owner])) +
+    "</td><td>" + esc(t.due || "—") + "</td><td>" + (editable ? '<select class="select" aria-label="Status" onchange="setTask(\'' + t.id + '\',\'status\',this.value)">' + opts(L.task, t.status) + "</select>" : taskPill(t.status)) + "</td></tr>").join("") + "</tbody></table></div>";
+}
+function setTask(id, k, v){ const t = S().tasks.find(x => x.id === id); t[k] = v; commit(); toast("Task updated."); }
+function renderTasks(){
+  const ps = myProjects();
+  let h = '<h1 class="page">Update Task List / By Project</h1><p class="sub">Leap Up updates tasks; clients follow their to-dos. ' + tbd("Edit rights TBD (dashboard-tasks OQ-8). Realtime vs daily update is OPEN C2.") + "</p>";
+  if (!ps.length) h += '<div class="card empty" style="margin-top:18px">No project assigned.</div>';
+  ps.forEach(p => {
+    const leap = mySide(p.id) === "leapup";
+    h += '<div class="section-h">' + esc(p.homeName || p.code) + "</div>" + taskTable(p.id, leap);
+    if (leap) h += '<form class="card row" style="margin-top:8px;align-items:flex-start" novalidate onsubmit="addTask(event,\'' + p.id + '\')">' +
+      '<label class="field" style="flex:2;min-width:160px;margin:0" for="nt-' + p.id + '"><span class="lbl">New task</span><input class="input" id="nt-' + p.id + '" type="text" placeholder="Task name" aria-invalid="false"><span class="err-inline" id="nt-' + p.id + '-err">Enter a task name. ' + tbd("Wording TBD") + "</span></label>" +
+      '<label class="field" style="flex:1;min-width:110px;margin:0" for="no-' + p.id + '"><span class="lbl">Owner</span><select class="select" id="no-' + p.id + '">' + opts(L.side, "leapup") + "</select></label>" +
+      '<label class="field" style="flex:1;min-width:100px;margin:0" for="nd-' + p.id + '"><span class="lbl">Due</span><input class="input" id="nd-' + p.id + '" type="text" placeholder="e.g. 28 Nov"></label>' +
+      '<button class="btn btn-primary" id="nb-' + p.id + '" style="margin-top:20px">' + ic("plus") + "Add task</button></form>";
+  });
+  sec("tasks").innerHTML = h;
+  ps.forEach(p => { if ($("nt-" + p.id)) bindRequired("nt-" + p.id, "nt-" + p.id + "-err"); });
+}
+function addTask(e, pid){
+  e.preventDefault();
+  if (!validateRequired([["nt-" + pid, "nt-" + pid + "-err"]])) return;                              // E-dashboard-tasks-001
+  busy($("nb-" + pid), "Saving…", 500, () => {
+    S().tasks.push({ id: nextId("t"), project: pid, name: $("nt-" + pid).value.trim(), owner: $("no-" + pid).value, due: $("nd-" + pid).value.trim(), status: "todo" });
+    commit(); renderTasks(); toast("Task added as To Do.");
+  });
+}
+
+// ── Home (P2, FR-dashboard-tasks-001…011)
+function renderHome(){
+  const ps = myProjects(); const ids = ps.map(p => p.id);
+  const ts = S().tasks.filter(t => ids.includes(t.project));
+  const acts = S().actions.filter(a => ids.includes(a.project));
+  let h = '<h1 class="page">Dashboard</h1><p class="sub">Who sees Home (Leap Up only or clients too) is TBD. ' + tbd("dashboard-tasks OQ-4") + "</p>";
+  h += '<div class="tabs"><button class="tab active">Dashboard</button><button class="tab" onclick="document.getElementById(\'pm\').scrollIntoView()">Project Management</button><button class="tab" onclick="goto(\'tasks\')">Update Task List</button></div>';
+  h += '<div class="section-h">01 Dashboard ' + tbd("Counting rules TBD (OQ-1)") + '</div><div class="grid">' +
+    [["Active Projects", ps.filter(p => p.status === "In Progress").length], ["Total Tasks", ts.length], ["Completed Tasks", ts.filter(t => t.status === "completed").length]].map(s =>
+      '<div class="card stat"><b>' + pad2(s[1]) + "</b><span>" + s[0] + "</span></div>").join("") + "</div>";
+  h += '<div class="two"><div><div class="section-h" id="pm">02 Project Management ' + tbd("Progress rule TBD") + '</div><div class="grid">' + ps.map(p =>
+      '<button class="card folder" onclick="openProject(\'' + p.id + '\')"><b>' + esc(p.homeName || p.code) + "</b><span>Deadline: " + esc(p.due || "TBD") + "</span><span>Progress: " + (p.progress == null ? "TBD" : p.progress + "%") + '</span><div class="progress"><i style="width:' + (p.progress || 0) + '%"></i></div></button>').join("") + "</div>";
+  h += '<div class="section-h">03 Update Task List / By Project</div>' + ps.map(p => '<p style="font-weight:700;margin:10px 0 6px">' + esc(p.homeName || p.code) + "</p>" + taskTable(p.id, false)).join("") + "</div>";
+  h += '<div><div class="section-h">Action Required ' + tbd("Item sources TBD (OQ-3)") + '</div><div class="card">';
+  if (!acts.length) h += '<div class="empty">' + ic("check") + "Nothing needs your review right now. " + tbd("Wording TBD") + "</div>";      // E-dashboard-tasks-002
+  else {
+    h += '<p style="font-weight:800;font-size:16px">' + acts.length + " Pending Review" + (acts.length === 1 ? "" : "s") + '</p><p class="sub" style="font-size:12px">Items awaiting client review. Dates and tasks below are sample data.</p>';
+    h += acts.map(a => { const p = S().projects.find(x => x.id === a.project);
+      return '<div class="action"><div class="meta"><b>' + esc(a.title) + "</b><br>" + esc(p.code) + " · " + esc(a.area) + "<br>" + esc(a.desc) + "<br>" + esc(a.due) + '</div>' + (a.target === "out"
+        ? '<span><button class="btn btn-sm" disabled title="Material Library is not in the quoted scope">Review Now</button>' + tbd("Target is Material Library, which is OUT (quote §7). No screen.") + "</span>"
+        : '<button class="btn btn-sm btn-primary" onclick="reviewNow(\'' + a.id + '\')">Review Now</button>') + "</div>"; }).join("");
+  }
+  h += "</div></div></div>";
+  sec("home").innerHTML = h;
+}
+function reviewNow(id){
+  const a = S().actions.find(x => x.id === id);
+  if (a.target === "out") { toast("Material Library is not in the quoted scope (OUT). No screen in this prototype."); return; }
+  S().ui.project = a.project;
+  if (a.target === "video") { S().ui.round[a.project] = 2; commit(); goto("video-review"); }
+  else { S().ui.ptab = "files"; S().ui.folder = null; S().ui.search = ""; commit(); goto("project"); }
+}
+
+// ── Production Timeline (P2, FR-production-timeline-001…008; C6 OPEN)
+function renderTimeline(){
+  const p = proj(); const tl = S().timelines[p.id]; const leap = mySide(p.id) === "leapup";
+  let h = crumbs([["Projects", "projects"], [p.code, "project"], ["Proposal"], ["Timeline"]]);
+  h += '<h1 class="page">Proposal / Production Timeline</h1><p class="sub"><b>' + projLine(p) + " | Due " + esc(p.due || "TBD") + "</b></p>";
+  if (!tl) { sec("timeline").innerHTML = h + '<div class="card empty" style="margin-top:18px">' + ic("clock") + "No production timeline for this project yet. " + tbd("Wording TBD; who sets it up TBD") + "</div>"; return; }   // E-production-timeline-001
+  h += '<div class="section-h">Production stages ' + (leap ? tbd("Edit control not drawn (OQ-2)") : "") + '</div><div class="stages">' + tl.stages.map((s, i) =>
+    '<div class="card stage ' + s.status + '"><div class="num">' + s.n + " " + esc(L.stage[s.status]) + "</div><b>" + esc(s.name) + "</b><span>" + esc(s.dates) + "</span>" +
+    (leap ? '<select class="select" style="margin-top:8px;padding:3px;font-size:11px" aria-label="Stage status" onchange="setStage(' + i + ',this.value)">' + opts(L.stage, s.status) + "</select>" : "") + "</div>").join("") + "</div>";
+  h += '<div class="two"><div><div class="section-h">Milestones ' + tbd("Status meanings TBD (OQ-3)") + '</div><div class="table-wrap"><table class="t"><thead><tr><th>Milestone</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>' + tl.milestones.map((m, i) =>
+    "<tr><td>" + esc(m.name) + "</td><td>" + esc(L.side[m.owner]) + "</td><td>" + esc(m.due) + "</td><td>" + (leap ? '<select class="select" aria-label="Milestone status" onchange="setMs(' + i + ',this.value)">' + opts(L.ms, m.status) + "</select>" : '<span class="pill ' + (m.status === "done" ? "solid" : m.status === "not_started" ? "soft" : "dash") + '">' + esc(L.ms[m.status]) + "</span>") + "</td></tr>").join("") + "</tbody></table></div></div>";
+  const clientSide = mySide(p.id) === "client";
+  h += '<div><div class="section-h">Client Inputs ' + tbd("In scope? OPEN C6") + '</div><div class="card">' + tl.inputs.map(x =>
+    '<div class="kv"><span>' + esc(x.name) + '</span><span class="pill ' + (x.status === "received" ? "solid" : "dash") + '">' + (x.status === "received" ? ic("check") : "") + esc(L.input[x.status]) + "</span></div>").join("") +
+    (clientSide ? '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="openInputs()" ' + (tl.inputs.some(x => x.status === "missing") ? "" : "disabled") + ">" + ic("upload") + "Upload inputs</button>" : '<p class="sub" style="font-size:12px;margin-top:8px">The client uploads missing inputs.</p>') + "</div>";
+  h += '<div class="section-h">Feedback rule ' + tbd("Static or per project: OPEN C6 (OQ-6)") + '</div><div class="card" style="font-size:13px;line-height:1.6">Consolidated feedback within 2 working days per round.<br>Late feedback shifts delivery.<br><b>Final approver: Client</b></div></div></div>';
+  sec("timeline").innerHTML = h;
+}
+function setStage(i, v){ S().timelines[proj().id].stages[i].status = v; commit(); renderTimeline(); toast("Stage updated."); }
+function setMs(i, v){ S().timelines[proj().id].milestones[i].status = v; commit(); toast("Milestone updated."); }
+function openInputs(){
+  const tl = S().timelines[proj().id];
+  $("in-item").innerHTML = tl.inputs.map((x, i) => x.status === "missing" ? '<option value="' + i + '">' + esc(x.name) + "</option>" : "").join("");
+  $("in-banner").classList.remove("show"); openModal($("dlg-input"));
+}
+function doInputUpload(e){
+  e.preventDefault(); $("in-banner").classList.remove("show");
+  busy($("in-submit"), "Uploading…", 800, () => {
+    const tl = S().timelines[proj().id]; const it = tl.inputs[Number($("in-item").value)];
+    if (S().sim.uploadFail) {                                                                        // E-production-timeline-002
+      S().sim.uploadFail = null; commit();
+      $("in-banner").innerHTML = "The upload failed. " + esc(it.name) + " is still Missing. Try again. " + tbd("Wording TBD"); $("in-banner").classList.add("show"); return;
+    }
+    it.status = "received"; commit(); closeDlg("dlg-input"); renderTimeline(); toast(esc(it.name) + " received.");
+  });
+}
+
+// ── Revision & Sign-off (P2, FR-outcome-approval-001…010; C4/C5/C9 OPEN)
+function approval(pid){
+  if (!S().approvals[pid]) S().approvals[pid] = { counts: null, approvers: [], crs: [], finalFile: null, checklist: structuredClone(DEMO.approvals.p711.checklist), checks: [false, false, false], log: [], signedOff: null };
+  return S().approvals[pid];
+}
+function renderSignoff(){
+  const p = proj(); const a = approval(p.id); const leap = mySide(p.id) === "leapup";
+  let h = crumbs([["Projects", "projects"], [p.code, "project"], ["Outcome Development"], ["Revision"]]);
+  h += '<h1 class="page">Outcome Development / Revision &amp; Sign-off</h1><p class="sub"><b>' + projLine(p) + "</b></p>";
+  h += '<div class="two"><div>';
+  h += '<div class="section-h">Revision rounds ' + tbd("Quota rule OPEN C5") + '</div><div class="card">' + (a.counts ? '<div class="counts"><div><b>' + a.counts.included + "</b><span>Included</span></div><div><b>" + a.counts.used + "</b><span>Used</span></div><div><b>" + a.counts.remaining + '</b><span>Remaining</span></div></div><p class="sub" style="font-size:12px;margin-top:10px">Round 3 onwards: additional scope &amp; cost<br>Client confirms before work starts.</p>' : '<p class="sub">Revision quota not set for this project. TBD</p>') + "</div>";
+  h += '<div class="section-h">Change requests ' + tbd("Who creates and edits is TBD (OQ-3)") + "</div>";
+  if (!a.crs.length) h += '<div class="table-wrap"><div class="empty">No change requests yet. ' + tbd("Wording TBD") + "</div></div>";    // E-outcome-approval-003
+  else h += '<div class="table-wrap"><table class="t"><thead><tr><th>Request</th><th>Round</th><th>Scope</th><th>Cost</th><th>Status</th></tr></thead><tbody>' + a.crs.map(c =>
+    "<tr><td>" + esc(c.request) + "</td><td>" + esc(c.round) + '</td><td><span class="pill ' + (c.scope === "out" ? "dash" : "soft") + '">' + esc(L.scope[c.scope]) + "</span></td><td>" + esc(c.cost) + '</td><td><span class="pill ' + (c.status === "done" ? "solid" : "") + '">' + esc(L.cr[c.status]) + "</span></td></tr>").join("") + "</tbody></table></div>";
+  if (leap) {
+    const rn = rounds().map(r => "R" + r.n);
+    h += '<form class="card row" style="margin-top:8px;align-items:flex-start" novalidate onsubmit="addCR(event)"><label class="field" style="flex:2;min-width:150px;margin:0" for="cr-text"><span class="lbl">New change request</span><input class="input" id="cr-text" type="text" placeholder="What should change" aria-invalid="false"><span class="err-inline" id="cr-text-err">Describe the request. ' + tbd("Wording TBD") + "</span></label>" +
+      '<label class="field" style="min-width:80px;margin:0" for="cr-round"><span class="lbl">Round</span><select class="select" id="cr-round">' + rn.map(x => "<option>" + x + "</option>").join("") + "</select></label>" +
+      '<label class="field" style="min-width:120px;margin:0" for="cr-scope"><span class="lbl">Scope</span><select class="select" id="cr-scope">' + opts(L.scope, "in") + "</select></label>" +
+      '<label class="field" style="min-width:130px;margin:0" for="cr-status"><span class="lbl">Status</span><select class="select" id="cr-status">' + opts(L.cr, "quote_sent") + "</select></label>" + '<button class="btn btn-primary" id="cr-save" style="margin-top:20px">' + ic("plus") + "Add</button></form>";
+  }
+  h += '</div><div><div class="section-h">Approvers ' + tbd("Who may approve: OPEN C4") + '</div><div class="card">' + (a.approvers.length ? a.approvers.map(x => '<div class="kv"><span>' + esc(x.title) + '</span><span class="pill soft">' + esc(x.side) + "</span></div>").join("") : '<p class="sub">Not set. TBD</p>') + "</div>";
+  h += '<div class="section-h">Final sign-off</div><div class="card"><p style="font-size:12px;color:var(--muted)">Final approver: Client</p><p style="font-weight:700;margin:4px 0 10px">' + esc(a.finalFile || "Final file TBD") + "</p>";
+  if (a.signedOff) h += '<p class="pill solid">' + ic("check") + "Signed off " + esc(a.signedOff.date) + " by " + esc(a.signedOff.by) + "</p>" + '<p class="sub" style="font-size:12px;margin-top:8px">Effects of sign-off (file Final, lock) TBD (OQ-4).</p>';
+  else {
+    h += '<div class="banner err" id="so-err" role="alert"></div>' + a.checklist.map((c, i) => '<label class="check"><input type="checkbox" ' + (a.checks[i] ? "checked" : "") + ' onchange="setCheck(' + i + ',this.checked)">' + esc(c) + "</label>").join("") +
+      '<p class="sub" style="font-size:11px;margin:4px 0 10px">All items required before approval. ' + tbd("Assumed. The checklist rule is OPEN C9.") + '</p><button class="btn btn-primary btn-block" id="so-approve" onclick="approveFinal()" data-cmt="signoff.approve">Approve final version</button>';
+  }
+  h += '</div><div class="section-h">Approval log</div><div class="card">' + a.log.map(l => '<div class="kv"><span>' + esc(l.event) + "</span><span>" + esc(l.date) + "</span></div>").join("") +
+    (a.signedOff ? "" : '<div class="kv"><span>Final sign-off</span><span class="pill dash">Pending</span></div>') + "</div></div></div>";
+  sec("signoff").innerHTML = h;
+  if ($("cr-text")) bindRequired("cr-text", "cr-text-err");
+}
+function setCheck(i, v){ approval(proj().id).checks[i] = v; commit(); }
+function approveFinal(){
+  const p = proj(); const a = approval(p.id); const err = $("so-err"); err.classList.remove("show");
+  busy($("so-approve"), "Approving…", 700, () => {
+    if (mySide(p.id) !== "client") { err.innerHTML = "You can't approve the final version. The final approver is the client. " + tbd("Approver rule OPEN C4; wording TBD"); err.classList.add("show"); return; }   // E-outcome-approval-001
+    if (a.checks.some(c => !c)) { err.innerHTML = "Tick every checklist item before approving. " + tbd("Checklist rule OPEN C9; wording TBD"); err.classList.add("show"); return; }                                // E-outcome-approval-002
+    a.signedOff = { by: me().name, date: DEMO.todayShort };
+    a.log.push({ event: "Final sign-off by " + me().name, date: DEMO.todayShort });
+    sendEmail(p.id, "leapup", "Final version signed off");
+    commit(); renderSignoff(); toast("Final version signed off.");
+  });
+}
+function addCR(e){
+  e.preventDefault();
+  if (!validateRequired([["cr-text", "cr-text-err"]])) return;
+  busy($("cr-save"), "Saving…", 500, () => {
+    approval(proj().id).crs.push({ request: $("cr-text").value.trim(), round: $("cr-round").value, scope: $("cr-scope").value, cost: $("cr-scope").value === "out" ? "TBD" : "—", status: $("cr-status").value });
+    commit(); renderSignoff(); toast("Change request added.");
+  });
+}
+
+// ── Admin (MVP, FR-admin-001…008; layout TBD C3)
+function renderAdmin(){
+  let h = '<h1 class="page">Admin ' + tbd("No board design for admin (C3)") + '</h1><p class="sub">Create projects and client accounts, then assign members with role Leap Up or Client.</p>';
+  h += '<div class="row" style="margin-top:16px"><button class="btn btn-primary" onclick="goto(\'project-form\')">' + ic("plus") + 'Create project</button><button class="btn" onclick="goto(\'account-form\')">' + ic("plus") + 'Create client account</button><button class="btn" onclick="openMembers(null)">' + ic("users") + "Assign members</button></div>";
+  h += '<div class="section-h">Projects</div><div class="table-wrap"><table class="t"><thead><tr><th>Project</th><th>Client</th><th>Due</th><th>Members</th><th></th></tr></thead><tbody>' + S().projects.map(p =>
+    "<tr><td><b>" + esc(p.code) + "</b>" + (p.title ? "<br><span class=\"sub\">" + esc(p.title) + "</span>" : "") + "</td><td>" + esc(p.client) + "</td><td>" + esc(p.due || "TBD") + "</td><td>" + S().members.filter(m => m.project === p.id).length +
+    '</td><td><button class="text-link" onclick="openMembers(\'' + p.id + '\')">Assign members</button></td></tr>').join("") + "</tbody></table></div>";
+  h += '<div class="section-h">Accounts</div><div class="table-wrap"><table class="t"><thead><tr><th>User ID</th><th>Name</th><th>Side</th><th>Projects</th></tr></thead><tbody>' + S().users.map(u =>
+    "<tr><td>" + esc(u.id) + "</td><td>" + esc(u.name) + "</td><td>" + (u.admin ? "Admin" : esc(L.side[u.side])) + "</td><td>" + (S().members.filter(m => m.user === u.id).map(m => esc(S().projects.find(p => p.id === m.project).code)).join(", ") || "—") + "</td></tr>").join("") + "</tbody></table></div>";
+  sec("admin-home").innerHTML = h;
+}
+function openMembers(pid){ S().ui.membersProject = pid || S().ui.membersProject || (S().projects[0] && S().projects[0].id); commit(); goto("members"); }
+function saveProject(e){
+  e.preventDefault(); $("pf-banner").classList.remove("show");
+  if (!validateRequired([["pf-code", "pf-code-err"], ["pf-client", "pf-client-err"]])) return;    // E-admin-001
+  busy($("pf-save"), "Saving…", 600, () => {
+    const id = nextId("p");
+    S().projects.push({ id, code: $("pf-code").value.trim(), title: $("pf-title").value.trim(), homeName: $("pf-code").value.trim(), client: $("pf-client").value.trim(), due: $("pf-due").value.trim(), status: "In Progress", progress: null });
+    S().ui.membersProject = id; S().ui.membersUser = null; commit(); goto("members");
+    toast("Project created with folders Proposal, Material and Outcome Development.");
+  });
+}
+function saveAccount(e){
+  e.preventDefault(); $("af-banner").classList.remove("show");
+  if (!validateRequired([["af-id", "af-id-err"], ["af-pw", "af-pw-err"]])) return;                // E-admin-001
+  const uid = $("af-id").value.trim();
+  busy($("af-save"), "Saving…", 600, () => {
+    if (S().users.some(u => u.id.toLowerCase() === uid.toLowerCase())) {                              // E-admin-002
+      $("af-banner").innerHTML = "This User ID is already taken. Choose another one. " + tbd("Wording TBD"); $("af-banner").classList.add("show");
+      setFieldError($("af-id"), null, true); return;
+    }
+    S().users.push({ id: uid, name: $("af-name").value.trim() || uid, side: "client" });
+    S().pw[uid] = pwHash($("af-pw").value);
+    S().ui.membersUser = uid; commit(); goto("members");
+    toast("Account " + esc(uid) + " created. Assign it to a project.");
+  });
+}
+function renderMembers(){
+  const pid = S().ui.membersProject || (S().projects[0] && S().projects[0].id); S().ui.membersProject = pid;
+  const p = S().projects.find(x => x.id === pid);
+  const ms = S().members.filter(m => m.project === pid);
+  const candidates = S().users.filter(u => !u.admin && !ms.some(m => m.user === u.id));
+  const pre = S().ui.membersUser && candidates.some(u => u.id === S().ui.membersUser) ? S().ui.membersUser : (candidates[0] && candidates[0].id);
+  const preUser = S().users.find(u => u.id === pre);
+  let h = '<div class="crumbs"><a onclick="goto(\'admin-home\')">Admin</a> / Assign members</div><h1 class="page">Assign members ' + tbd("No board design for admin (C3)") + "</h1>";
+  h += '<label class="field" for="mb-project" style="max-width:360px;margin-top:16px"><span class="lbl">Project</span><select class="select" id="mb-project" onchange="S().ui.membersProject=this.value;commit();renderMembers()">' +
+    S().projects.map(x => '<option value="' + x.id + '"' + (x.id === pid ? " selected" : "") + ">" + esc(x.code) + "</option>").join("") + "</select></label>";
+  h += '<div class="section-h">Members of ' + esc(p.code) + '</div><div class="table-wrap"><table class="t"><thead><tr><th>User ID</th><th>Name</th><th>Role in project</th></tr></thead><tbody>' +
+    (ms.length ? ms.map(m => "<tr><td>" + esc(m.user) + "</td><td>" + esc(userName(m.user)) + "</td><td>" + esc(L.side[m.role]) + "</td></tr>").join("") : '<tr><td colspan="3" class="empty">No members yet. A user sees the project only after being assigned.</td></tr>') + "</tbody></table></div>";
+  if (candidates.length) h += '<form class="card row" style="margin-top:10px;align-items:flex-end" novalidate onsubmit="addMember(event)"><label class="field" style="flex:2;min-width:180px;margin:0" for="mb-user"><span class="lbl">User</span><select class="select" id="mb-user">' +
+    candidates.map(u => '<option value="' + esc(u.id) + '"' + (u.id === pre ? " selected" : "") + ">" + esc(u.id) + " — " + esc(u.name) + "</option>").join("") + '</select></label><label class="field" style="flex:1;min-width:120px;margin:0" for="mb-role"><span class="lbl">Role</span><select class="select" id="mb-role">' + opts(L.side, preUser ? preUser.side : "client") + '</select></label><button class="btn btn-primary" id="mb-add">' + ic("plus") + "Assign</button></form>";
+  else h += '<p class="sub" style="margin-top:10px">Every account is already a member of this project.</p>';
+  h += '<p class="sub" style="margin-top:10px">Removing a member is not in the spec. ' + tbd("TBD") + '</p><div class="row" style="margin-top:16px"><button class="btn" onclick="goto(\'admin-home\')">Done</button></div>';
+  sec("members").innerHTML = h;
+}
+function addMember(e){
+  e.preventDefault();
+  const uid = $("mb-user").value, role = $("mb-role").value, pid = S().ui.membersProject;
+  busy($("mb-add"), "Assigning…", 500, () => {
+    S().members.push({ project: pid, user: uid, role }); S().ui.membersUser = null;
+    commit(); renderMembers(); toast(esc(userName(uid)) + " assigned as " + esc(L.side[role]) + ".");
+  });
+}
+
+// Escape on the upload dialog asks before discarding chosen files
+$("dlg-upload").addEventListener("cancel", e => { if (pendingUpload.length && !confirm("Discard the chosen files?")) e.preventDefault(); else pendingUpload = []; });
+// ════ INIT ════
+bindRequired("login-id", "login-id-err"); bindRequired("login-pw", "login-pw-err");
+bindRequired("pf-code", "pf-code-err"); bindRequired("pf-client", "pf-client-err");
+bindRequired("af-id", "af-id-err"); bindRequired("af-pw", "af-pw-err");
+renderSim();
+showScreen(location.hash.slice(1) || DEFAULT_SCREEN);
+</script>
+</body>
+</html>

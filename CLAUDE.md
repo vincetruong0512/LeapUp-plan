@@ -47,6 +47,9 @@ Open scope questions (quote vs Miro wireframe, e.g. realtime task list, approver
 - Supporting (after `/srs`, licensed BA-Kit adaptations, gitignored), MVP + P2: `/usecase` fully-dressed use cases
   with UC ↔ FR ↔ story ↔ error trace · `/sequence` and `/activity` Mermaid diagrams per use case in
   `docs/{feature}/srs/{feature}-flows.md`.
+- `/prototype-html` (after `/wireframe-html`, licensed BA-Kit adaptation, gitignored), MVP + P2: one clickable,
+  state-driven HTML prototype per feature or `portal` (all quoted flows in one app), neutral greyscale; never OUT.
+  Comment layer (syncs to jsonbin.io) off by default; warn and get a yes before embedding it.
 
 ## Rules
 

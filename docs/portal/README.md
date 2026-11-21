@@ -17,3 +17,4 @@ Project-level overview of the Leap Up Client Project Portal (scope: MVP framing)
 
 - [delivery-plan.md](delivery-plan.md) — phases, 8-week timeline, story order, open points by sprint, document index.
 - [technical-solution-design.md](technical-solution-design.md) — technical proposal (fixed quote constraints vs proposals).
+- [prototype/portal-prototype.html](prototype/portal-prototype.html) — clickable prototype of all quoted MVP + P2 flows (`/prototype-html portal`, draft 2026-11-22). Open it in a browser; sample users in the floating menu's Off-screen tab (password `demo`).
