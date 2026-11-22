@@ -178,7 +178,7 @@
   <div class="wf-header">
     <div class="wf-feature-label">Feature: auth-access / Wireframe</div>
     <div class="wf-flow-title">Sign in and sign out</div>
-    <div class="wf-flow-meta">4 screens · Device: desktop · Generated: 2026-11-22 · Source: srs/auth-access-userflow.md + spec + Miro board</div>
+    <div class="wf-flow-meta">5 screens · Device: desktop · Generated: 2026-11-22 · Source: srs/auth-access-userflow.md + spec + Miro board</div>
     <div class="wf-flow-desc">Login as drawn on Miro board 01, plus the states the spec needs. Wording not on the board is TBD.</div>
   </div>
 
@@ -251,6 +251,16 @@
     </div>
     <div class="wf-screen-label">landing</div>
   </div>
+
+  <div class="wf-screen" id="s5">
+    <div class="wf-step-badge">5</div>
+    <div class="wf-device-tag">desktop · 1024px · not on board</div>
+    <div class="wf-screen-frame">
+      <div class="wf-screen-bar"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><span class="wf-bar-title">Not assigned</span></div>
+      <div class="wf-screen-content" style="padding:0"><div style="padding:24px"><p class="hint-text">[TBD — refusal state not drawn on the board · E-auth-access-003, wording TBD]</p><p class="hint-text">[No content of the requested project, file, video or comment is shown]</p><button class="btn-secondary" style="width:auto;display:inline-block">Back to my projects (wording TBD)</button></div></div>
+    </div>
+    <div class="wf-screen-label">not-assigned</div>
+  </div>
   </div>
 
   <div class="wf-desc-section">
@@ -269,18 +279,23 @@
 <tr><td>6</td><td>Heading + subtitle</td><td>Label</td><td>ReadOnly</td><td>"Welcome" / "Sign in to access your project workspace." (L25, L41).</td></tr>
 <tr><td>7</td><td>User ID</td><td>Textbox</td><td>Text</td><td>Purpose: identify the user (FR-auth-access-001). Required — empty → E-auth-access-002 (wording TBD). Placeholder "Enter your User ID" (L69). Not case-sensitive (FR-auth-access-005). Issued by Leap Up only (BR-auth-access-001). Max length / format TBD.</td></tr>
 <tr><td>8</td><td>Password</td><td>Textbox</td><td>Text</td><td>Masked input (FR-auth-access-002). Required — empty → E-auth-access-002. Placeholder "Enter your password" (L89). Password rules TBD (spec OQ-7).</td></tr>
-<tr><td>9</td><td>Show</td><td>Link</td><td>Click</td><td>Reveals the typed password (L90). Label in the revealed state TBD (brainstorm OQ-24).</td></tr>
-<tr><td>10</td><td>Sign In</td><td>Button</td><td>Click</td><td>Checks the credentials (FR-auth-access-001). Fields empty → E-auth-access-002; no match → E-auth-access-001 (wording TBD); success → landing page (FR-auth-access-007, TBD). Loading state TBD. Lockout TBD (spec OQ-3).</td></tr>
+<tr><td>9</td><td>Show</td><td>Button</td><td>Click</td><td>Reveals the typed password (L90). Label in the revealed state, keyboard and screen-reader label TBD (spec OQ-12).</td></tr>
+<tr><td>10</td><td>Sign In</td><td>Button</td><td>Click</td><td>Checks the credentials (FR-auth-access-001). Fields empty → E-auth-access-002; no match → E-auth-access-001 (wording TBD); success → landing page (FR-auth-access-007, TBD). Lockout TBD (spec OQ-3).</td></tr>
+<tr><td>10a</td><td>Sign In — in progress</td><td>Label</td><td>ReadOnly</td><td>Loading / disabled state while credentials are checked: not on the board — TBD.</td></tr>
+<tr><td>12</td><td>A11y notes</td><td>—</td><td>—</td><td>Not on the board: focus moves to the first field with an error; Show toggle reachable by keyboard. TBD with Leap Up.</td></tr>
 <tr><td>11</td><td>Project access note</td><td>Label</td><td>ReadOnly</td><td>"PROJECT ACCESS NOTE" / "Each client receives a unique User ID and Password for each assigned project. Access is project-specific." (L150, L159, L170). Wording vs one-ID-per-person decision TBD (spec OQ-9).</td></tr>
 <tr class="wf-desc-screen-header"><td colspan="5">Screen 2: Login — error state</td></tr>
-<tr><td>1</td><td>Error message</td><td>Label</td><td>ReadOnly</td><td>Shown after Sign In fails. Wrong credentials → E-auth-access-001; empty field → E-auth-access-002. Wording and position not on the board — TBD (spec OQ-6). Must not reveal whether the User ID exists (assumed; confirm).</td></tr>
+<tr><td>1</td><td>Error message</td><td>Label</td><td>ReadOnly</td><td>Shown after Sign In fails. Wrong credentials → E-auth-access-001; empty field → E-auth-access-002. Wording not on the board — TBD (spec OQ-6). The banner above the fields is a marker only: position, whether the User ID is kept, and whether the message may reveal that a User ID exists are TBD (spec OQ-13).</td></tr>
 <tr><td>2</td><td>Other elements</td><td>Label</td><td>ReadOnly</td><td>Same as Screen 1.</td></tr>
 <tr class="wf-desc-screen-header"><td colspan="5">Screen 3: Landing — no projects</td></tr>
 <tr><td>1</td><td>No-projects message</td><td>Label</td><td>ReadOnly</td><td>Signed-in user with no assigned project (FR-auth-access-008, E-auth-access-004). Wording TBD.</td></tr>
 <tr><td>2</td><td>Sign out</td><td>Button</td><td>Click</td><td>Ends the session, returns to Login (FR-auth-access-011). Placement and wording TBD (spec OQ-2).</td></tr>
 <tr class="wf-desc-screen-header"><td colspan="5">Screen 4: Landing — project list</td></tr>
-<tr><td>1</td><td>Project list</td><td>Label</td><td>ReadOnly</td><td>Only projects the user is assigned to (FR-auth-access-006, BR-auth-access-002). Admin sees all. Layout TBD.</td></tr>
-<tr><td>2</td><td>Sign out</td><td>Button</td><td>Click</td><td>As Screen 3.</td></tr>
+<tr><td>1</td><td>Project list</td><td>Link</td><td>Click</td><td>Only projects the user is assigned to (FR-auth-access-006, BR-auth-access-002); opening one goes to project-files. Whether Admin sees all: TBD (spec OQ-10). Layout TBD.</td></tr>
+<tr><td>2</td><td>Sign out</td><td>Button</td><td>Click</td><td>As Screen 3. Not on the board.</td></tr>
+<tr class="wf-desc-screen-header"><td colspan="5">Screen 5: Not assigned</td></tr>
+<tr><td>1</td><td>Refusal message</td><td>Label</td><td>ReadOnly</td><td>Shown when a user requests a project, file, video or comment of a project they are not assigned to (FR-auth-access-009, E-auth-access-003). No project content shown. Wording and layout TBD.</td></tr>
+<tr><td>2</td><td>Back to my projects</td><td>Button</td><td>Click</td><td>Returns to the landing page. Wording TBD.</td></tr>
       </tbody>
     </table>
   </div>

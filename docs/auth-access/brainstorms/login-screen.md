@@ -89,8 +89,9 @@ All three use the same Login page — the board has one (OQ-1).
              │ YES                  │ lockout TBD (OQ-9)             │
              ▼                      └───────────────────────────────┘
 ┌──────────────────────────┐   NO   ┌───────────────────────────────┐
-│ Account active?          │ ─────▶ │ Error, stay on Login           │
-└────────────┬─────────────┘        │ wording TBD (OQ-11)            │
+│ Account active? (step    │ ─────▶ │ Error, stay on Login           │
+│ needed? TBD, spec OQ-8)  │        │ wording TBD (OQ-11)            │
+└────────────┬─────────────┘        │                                │
              │ YES                  └───────────────────────────────┘
              ▼
 ┌──────────────────────────┐   0    ┌───────────────────────────────┐
@@ -145,20 +146,20 @@ All three use the same Login page — the board has one (OQ-1).
 | Client | several | Yes, all assigned, with one User ID (OQ-3) | Refused | No |
 | Client | 0 | — "No projects" state (OQ-18) | Refused | No |
 | Leap Up member | assigned ones | Yes | Refused unless assigned | No |
-| Admin | all | Yes | Yes | Yes (feature `admin`) |
-| Any, deactivated | — | Cannot sign in | — | — |
+| Admin | all (assumed — TBD, spec OQ-10) | Yes | Yes (TBD, spec OQ-10) | Yes (feature `admin`) |
+| Any, deactivated (only if deactivation exists — TBD, spec OQ-8) | — | Cannot sign in | — | — |
 
 ### 6.3 State Transitions
 
 ```
-Account:  Active ──(admin deactivates)──▶ Deactivated ──(admin reactivates)──▶ Active
+Account:  Active ──(admin deactivates)──▶ Deactivated ──(admin reactivates)──▶ Active   (whole lifecycle TBD — not in the reference; spec OQ-8, admin OQ-6)
           Locked state — TBD (OQ-9)
 Session:  Signed out ──(sign in)──▶ Signed in ──(sign out / expiry TBD)──▶ Signed out
 ```
 
 | Entity | From | To | Trigger | Reversible? |
 |--------|------|----|---------|-------------|
-| Account | Active | Deactivated | Admin removes access (feature `admin`) | Yes — admin reactivates |
+| Account | Active | Deactivated | Admin removes access (feature `admin`) — TBD, spec OQ-8 | TBD |
 | Session | Signed in | Signed out | Sign out; expiry rule TBD (OQ-13) | Yes — sign in again |
 
 ### 6.4 Interrupted Transactions
@@ -200,7 +201,7 @@ Session:  Signed out ──(sign in)──▶ Signed in ──(sign out / expiry
 | Situation | Wording | Code |
 |---|---|---|
 | Wrong User ID or password | TBD (OQ-10) | E-01 |
-| Account deactivated | TBD (OQ-11) | E-02 |
+| Account deactivated (only if deactivation exists — spec OQ-8) | TBD (OQ-11) | E-02 |
 | Field empty | TBD (OQ-21) | E-03 |
 
 #### Success messages

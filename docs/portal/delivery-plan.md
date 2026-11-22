@@ -31,7 +31,7 @@ Plan for the development team, built from the quote and the Miro board only. Any
 | | Storyboard Review (`storyboard-review`, board section "MATERIAL \| DETAIL SCRIPT & STORY BOARD") | §7 | 06 | 3 | fully documented (draft); not scheduled |
 | | In-app notifications, realtime updates, multi-company SaaS | §7 | — | — | not planned |
 
-Totals (quoted scope): 8 features · 84 functional requirements · 25 error codes (wording TBD) · 30 user stories · 65 acceptance criteria (drafts) · 20 wireframe screens on 6 features. OUT add-ons: 2 features · 26 FR · 8 error codes · 7 stories · 17 AC · 9 screens. Board → feature map: [board-map.md](board-map.md).
+Totals (quoted scope): 8 features · 84 functional requirements · 25 error codes (wording TBD) · 30 user stories · 97 acceptance criteria (drafts; 22 marked blocked by an open question, after the 2026-11-22 review) · 20 wireframe screens on 6 features. OUT add-ons: 2 features · 26 FR · 8 error codes · 7 stories · 17 AC · 9 screens. Board → feature map: [board-map.md](board-map.md).
 
 **Change-request add-ons (not in the 8 weeks):** Material Library and Storyboard Review are ready to estimate if Leap Up orders them (quote §6). They depend on Project Files (upload, R2) and on the approver rule (C4); they are not in the sprint plan below.
 
@@ -109,18 +109,28 @@ Technical proposal: [technical-solution-design.md](technical-solution-design.md)
 
 Details and numbering live in each feature's spec §12.
 
+This is the full list of open points by deadline. Thirteen of them are cross-feature decisions D-01…D-13 from the 2026-11-22 MVP review ([review-2026-11-22-mvp.md](review-2026-11-22-mvp.md)); the rest are feature-level open questions. Business questions not tied to a sprint are in [portal-brd.md](portal-brd.md) §11.
+
 ### Before Sprint 1 (blocks Phase 1 build)
-- **C3** Admin screen design (admin OQ-1) — no board screen.
-- **Landing page** after sign-in (auth-access OQ-1).
+- **C3** Admin screen design, entry point and order of set-up steps (admin OQ-1, OQ-11) — no board screen.
+- **Who administers; how Leap Up member accounts and the first Admin account are created** (admin OQ-2).
+- **Project fields**, required fields and initial status (admin OQ-3).
+- **Password reset** — decided that the admin resets it; how is TBD (admin OQ-5). Remove member / deactivate account (admin OQ-6, auth-access OQ-8). Assignment errors (admin OQ-10).
+- **Roles:** does Admin see all projects; can one person hold different roles on different projects (auth-access OQ-10).
+- **Landing page** after sign-in and the projects list (auth-access OQ-1, project-files OQ-2).
+- Sign-in error behaviour (auth-access OQ-13).
 - **Upload rules:** allowed types, max size, client upload rights, folder choice (project-files OQ-3, OQ-4).
-- **File status rules** (project-files OQ-5).
-- **C7** Project Info tab content (project-files OQ-1).
+- **File status rules**, and whether Approved / Final are Phase 1 labels or P2 approval (project-files OQ-5, OQ-13).
+- **C7** Project Info tab content (project-files OQ-1); what P2 tabs and links do in Phase 1 (project-files OQ-14).
+- **File ↔ review link and round vs version model** — moved here from Sprint 2 because Project Files (Sprint 1) stores the videos (project-files OQ-17, video-review OQ-3, OQ-10). Video Review entry (video-review OQ-1 = project-files OQ-8).
 - Login security: lockout, session expiry, password rules (auth-access OQ-3, OQ-4, OQ-7).
+- **Phone browser:** phone layouts or a stacking rule, and test devices (auth-access OQ-5, project-files OQ-9, video-review OQ-8).
 - All error and empty-state wording (every spec's Error Matrix).
 
 ### Before Sprint 2
-- **Round vs version** model and how a new version is added (video-review OQ-3, OQ-4).
-- Who resolves comments; change-log editing (video-review OQ-2, OQ-5).
+- Round status triggers (video-review OQ-4).
+- Who resolves comments; change-log editing and its Phase 1 status lines (video-review OQ-2, OQ-5, OQ-13).
+- Comments on past / no-video rounds; timecode capture moment; submit control (video-review OQ-11, OQ-12, OQ-15).
 
 ### Before Sprint 3
 - **C2** realtime vs daily task update (dashboard-tasks OQ-5).

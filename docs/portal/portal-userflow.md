@@ -9,7 +9,7 @@ figma: file "Untitled", page "User Flows" (3 frames, Reqwise userflow, layout au
 # Leap Up portal: end-to-end user journeys per role
 
 Cross-feature view: one journey per user type, stitched from the approved per-feature user flows.
-It adds no new screens or rules; every step traces to a feature flow below. Scope: **MVP + P2**
+It adds no new rules; every step traces to a feature flow below. Edges drawn only here, to join feature flows: Landing → Admin pages, Pause → back to review, "Back" from matching files. Revised 2026-11-22 after the MVP review ([review-2026-11-22-mvp.md](review-2026-11-22-mvp.md)): not-assigned branch, upload error labels, download return, empty-folder upload, admin forms. Scope: **MVP + P2**
 (P2 steps prefixed `P2 ·`). `OUT` (Material Library, Storyboard Review) is not drawn.
 
 Roles: Admin, Leap Up member, Client. These are provisional (auth-access FR-010; C4 still OPEN for approver roles).
@@ -34,16 +34,18 @@ flowchart TD
   filled{"User ID and Password filled?"}
   match{"Credentials match?"}
   loginErr("Login error state")
-  landing["Landing · all projects (design TBD, OQ-1)"]
+  landing["Landing · all projects? (TBD, auth-access OQ-10; design TBD, OQ-1)"]
   admin["Admin page (no board design, C3)"]
   projForm["Create project form"]
   projOk{"Required fields filled?"}
   acctForm["Create client account form"]
   acctOk{"User ID unique?"}
-  formErr("Form error state")
+  projErr("Project form error · E-admin-001")
+  acctErr("Account form error · E-admin-001 / 002")
+  handover("Login details handed over outside the portal")
   members["Assign members · role Leap Up / Client"]
-  work(["Open a project · continues as Leap Up member journey"])
-  signout(["Signed out · back to Login"])
+  work("Open a project · continues as Leap Up member journey")
+  signout("Signed out · back to Login")
   login -->|"Sign In"| filled
   filled -->|"Yes"| match
   filled -->|"No · E-auth-access-002"| loginErr
@@ -53,14 +55,20 @@ flowchart TD
   landing -->|"Admin pages"| admin
   admin -->|"Create project"| projForm
   projForm -->|"Save"| projOk
-  projOk -->|"Yes"| members
-  projOk -->|"No · E-admin-001"| formErr
+  projOk -->|"Yes · folders created"| admin
+  projOk -->|"No"| projErr
+  projErr -.->|"Fix and save"| projForm
+  projForm -.->|"Cancel"| admin
   admin -->|"Create client account"| acctForm
   acctForm -->|"Save"| acctOk
-  acctOk -->|"Yes"| members
-  acctOk -->|"No · E-admin-002"| formErr
-  formErr -.->|"Fix and retry"| admin
-  members -.->|"Done"| admin
+  acctOk -->|"Yes"| admin
+  acctOk -->|"No"| acctErr
+  acctErr -.->|"Fix and save"| acctForm
+  acctForm -.->|"Cancel"| admin
+  admin -->|"Assign members · order of steps TBD"| members
+  members -->|"Save"| handover
+  members -.->|"Cancel"| admin
+  handover -.->|"Done"| admin
   landing -->|"Open project"| work
   landing -->|"Sign out"| signout
   admin -->|"Sign out · placement TBD"| signout
@@ -68,7 +76,7 @@ flowchart TD
   classDef error fill:#f8d7da,stroke:#dc3545
   classDef edge fill:#fff3cd,stroke:#ffc107
   class login,filled,match,landing,admin,projForm,projOk,acctForm,acctOk,members,work,signout happy
-  class loginErr,formErr error
+  class loginErr,projErr,acctErr error
 ```
 
 ## 2. Leap Up member
@@ -90,7 +98,7 @@ flowchart TD
   uploadOk{"Type and size allowed?"}
   uploaded("Row added to file table")
   uploadErr("Upload error state")
-  download(["File downloaded"])
+  download("File downloaded")
   hasVideo{"Round has a video?"}
   noVideo("No video yet state")
   review["Video Review · current round (board 07)"]
@@ -104,7 +112,7 @@ flowchart TD
   resolved("Comment marked Resolved")
   noResolve("Resolve not available (TBD)")
   otherRound("Selected round shown")
-  email[["P2 · E-mail to project members"]]
+  email["P2 · E-mail to project members"]
   home["P2 · Home dashboard (board 02)"]
   actions{"P2 · Action Required items?"}
   homeEmpty("P2 · No action required state")
@@ -116,7 +124,7 @@ flowchart TD
   editStage("P2 · Stage or milestone edited (controls TBD)")
   signoff["P2 · Revision & Sign-off (board 08)"]
   cr("P2 · Change request recorded")
-  signout(["Signed out · back to Login"])
+  signout("Signed out · back to Login")
   login -->|"Sign In"| filled
   filled -->|"Yes"| match
   filled -->|"No · E-auth-access-002"| loginErr
@@ -127,20 +135,25 @@ flowchart TD
   assigned -->|"None · E-auth-access-004"| noProj
   noProj -->|"Sign out"| signout
   landing -->|"Open project"| files
+  landing -.->|"Link to a project not assigned"| refused("Not assigned · E-auth-access-003")
+  refused -.->|"Back to my projects"| landing
+  class refused error
   files -->|"Search or select folder"| found
   found -->|"Yes"| listed
   found -->|"No match · E-project-files-002"| filesEmpty
   found -->|"Empty folder · E-project-files-004"| filesEmpty
   listed -.->|"Back"| files
   filesEmpty -.->|"Clear search"| files
+  filesEmpty -->|"Upload Files · empty folder"| upload
   files -->|"Upload Files"| upload
   upload -->|"Upload"| uploadOk
   uploadOk -->|"Yes"| uploaded
-  uploadOk -->|"Wrong type · E-project-files-001"| uploadErr
-  uploadOk -->|"Too large · E-project-files-003"| uploadErr
+  uploadOk -->|"Wrong type or too large · E-project-files-001"| uploadErr
+  uploadOk -->|"Upload failed · E-project-files-003"| uploadErr
   uploadErr -.->|"Try again"| upload
   uploaded -.->|"Back"| files
   files -->|"Download"| download
+  download -.->|"Back"| files
   files -->|"Open video (OQ-8)"| hasVideo
   hasVideo -->|"Yes"| review
   hasVideo -->|"No · E-video-review-004"| noVideo
@@ -193,7 +206,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  mail[["P2 · E-mail: new video"]]
+  mail["P2 · E-mail: new video"]
   login["Login (board 01)"]
   filled{"User ID and Password filled?"}
   match{"Credentials match?"}
@@ -211,7 +224,7 @@ flowchart TD
   uploadOk{"Type and size allowed?"}
   uploaded("Row added to file table")
   uploadErr("Upload error state")
-  download(["File downloaded"])
+  download("File downloaded")
   hasVideo{"Round has a video?"}
   noVideo("No video yet state")
   review["Video Review · current round (board 07)"]
@@ -239,8 +252,8 @@ flowchart TD
   signoff["P2 · Revision & Sign-off (board 08)"]
   checks{"P2 · All sign-off checks ticked?"}
   incomplete("P2 · Checklist incomplete state")
-  final(["P2 · Final version signed off"])
-  signout(["Signed out · back to Login"])
+  final("P2 · Final version signed off")
+  signout("Signed out · back to Login")
   mail -->|"Open link (target TBD)"| login
   login -->|"Sign In"| filled
   filled -->|"Yes"| match
@@ -252,23 +265,28 @@ flowchart TD
   assigned -->|"None · E-auth-access-004"| noProj
   noProj -->|"Sign out"| signout
   landing -->|"Open project"| files
+  landing -.->|"Link to a project not assigned"| refused("Not assigned · E-auth-access-003")
+  refused -.->|"Back to my projects"| landing
+  class refused error
   files -->|"Search or select folder"| found
   found -->|"Yes"| listed
   found -->|"No match · E-project-files-002"| filesEmpty
   found -->|"Empty folder · E-project-files-004"| filesEmpty
   listed -.->|"Back"| files
   filesEmpty -.->|"Clear search"| files
+  filesEmpty -->|"Upload Files · empty folder"| mayUpload
   files -->|"Upload Files"| mayUpload
   mayUpload -->|"Yes"| upload
   mayUpload -->|"No"| noUpload
   noUpload -.->|"Back"| files
   upload -->|"Upload"| uploadOk
   uploadOk -->|"Yes"| uploaded
-  uploadOk -->|"Wrong type · E-project-files-001"| uploadErr
-  uploadOk -->|"Too large · E-project-files-003"| uploadErr
+  uploadOk -->|"Wrong type or too large · E-project-files-001"| uploadErr
+  uploadOk -->|"Upload failed · E-project-files-003"| uploadErr
   uploadErr -.->|"Try again"| upload
   uploaded -.->|"Back"| files
   files -->|"Download"| download
+  download -.->|"Back"| files
   files -->|"Open video (OQ-8)"| hasVideo
   hasVideo -->|"Yes"| review
   hasVideo -->|"No · E-video-review-004"| noVideo
@@ -325,6 +343,9 @@ below these journeys in Figma and listed in [screen-design.md §2](screen-design
 
 ## 4. Counts (check against Figma)
 
+**Stale since 2026-11-22:** the Mermaid journeys above were revised after the MVP review; the Figma frames and the
+counts below still show the earlier version. Redraw in Figma and recount.
+
 | Journey | Nodes | Edges | Return edges | Figma frame |
 |---|---|---|---|---|
 | Admin | 14 | 20 | 3 | `Userflow · Admin · end-to-end journey` |
@@ -342,6 +363,9 @@ below these journeys in Figma and listed in [screen-design.md §2](screen-design
 | How a video opens Video Review | Leap Up, Client | project-files OQ-8 |
 | Who may resolve comments | Leap Up, Client | video-review OQ-2 |
 | How a new version / round is added (no control drawn; **not in the journeys**) | Leap Up | video-review OQ-3 |
+| Upload → review hand-off: how a video uploaded to Outcome Development becomes a round / version | Leap Up → Client | video-review OQ-10, project-files OQ-17 |
+| Who sees all projects (Admin), role per project | all roles | auth-access OQ-10 |
+| MVP and P2 are mixed in one diagram per role; an MVP-only view is still to draw (review FLOW-15) | all roles | review R-15 |
 | Action Required sources and Review Now target; client home | P2 | dashboard-tasks OQ-3, OQ-4 |
 | Timeline entry and edit controls; Client Inputs in scope | P2 | production-timeline OQ-2, OQ-4, OQ-5 (C6) |
 | Who may approve; approval control location | P2 Client | outcome-approval OQ-1, OQ-2 (C4) |

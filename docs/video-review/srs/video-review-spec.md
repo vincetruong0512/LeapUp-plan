@@ -31,7 +31,7 @@ Online video review: player with timeline markers, timecoded comments with Open/
 | FR-video-review-002 | Sidebar | Sidebar Dashboard, Projects, Files, Outcome Review; Outcome Review active. | MVP | P1 | demo | board L23, L31, L47, L51 |
 | FR-video-review-003 | Version history | List rounds with status (Reviewed / In Review / Upcoming) and date or "Pending"; the current round is highlighted. | MVP | P0 | demo | board L38–L45 |
 | FR-video-review-004 | Video player | Play the round's video online with play/pause, current/total time, volume and fullscreen; show the file name above the player. | MVP | P0 | demo | quote P1 #3; board L56, L85, L91, L145 |
-| FR-video-review-005 | Add timecoded comment | User adds a comment; it is pinned to the player's current timecode; input shows "Add comment at {mm:ss}...". | MVP | P0 | demo | quote P1 #3; board L147 |
+| FR-video-review-005 | Add timecoded comment | User adds a comment; it is pinned to the player's current timecode (moment taken — start or submit — and rounding TBD, OQ-12); input shows "Add comment at {mm:ss}...". Submit control not on the board (OQ-15). | MVP | P0 | demo | quote P1 #3; board L147 |
 | FR-video-review-006 | Empty comment | If the comment text is empty, then the system shall not save it (E-video-review-001). | MVP | P0 | test | brainstorm D1 |
 | FR-video-review-007 | Timeline markers | Each comment of the round shows as a marker on the timeline at its timecode, with the time label. | MVP | P0 | demo | quote P1 #3; board L57–L59, L136–L138 |
 | FR-video-review-008 | Comment list | List the round's comments with timecode chip, author side (Client / Leap Up), text, status; header "{n} comments \| Round {n}". | MVP | P0 | demo | board L55, L66, L75–L131 |
@@ -39,8 +39,8 @@ Online video review: player with timeline markers, timecoded comments with Open/
 | FR-video-review-010 | Rounds and versions | Leap Up provides a new version for a round / starts the next round. Mechanism TBD (OQ-3). | MVP | P0 | demo | quote P1 #3 |
 | FR-video-review-011 | Round status | Round status moves Upcoming → In Review → Reviewed. Triggers TBD (OQ-4). | MVP | P0 | demo | board L43–L45 |
 | FR-video-review-012 | Round change log | Show per round what changed and its status line. Who edits TBD (OQ-5). | MVP | P0 | demo | board L169–L193 |
-| FR-video-review-013 | View another round | Selecting a round in Version History shows that round's video and comments (inferred — OQ-6). | MVP | P1 | demo | board L38–L45 |
-| FR-video-review-014 | Project-scoped | Only project members (and Admin) can open the review. | MVP | P0 | test | auth-access FR-009 |
+| FR-video-review-013 | View another round | **Provisional — TBD pending OQ-6.** Selecting a round in Version History shows that round's video and comments (inferred, not stated in the reference). A round with no video shows E-video-review-004. | MVP | P1 | demo | board L38–L45 |
+| FR-video-review-014 | Project-scoped | Only project members can open the review, play its video or add/resolve comments (Admin: TBD, auth-access OQ-10); others get E-auth-access-003. | MVP | P0 | test | auth-access FR-009 |
 | FR-video-review-015 | Playback failure | If the video cannot be played, then the system shall show E-video-review-002. | MVP | P1 | test | brainstorm D3 |
 
 ## 4. Non-Functional Requirements (NFR)
@@ -50,7 +50,7 @@ Online video review: player with timeline markers, timecoded comments with Open/
 | NFR-video-review-001 | storage | Video stored in Cloudflare R2. | P0 | quote §5 |
 | NFR-video-review-002 | usability | Review works in a phone browser. | P0 | quote §7; layout TBD (OQ-8) |
 | NFR-video-review-003 | performance | Time until playback starts. | — | TBD — Leap Up |
-| NFR-video-review-004 | accuracy | Comment timecode equals the player position when the comment was started (to the second). | P0 | quote §1 "review video theo từng giây" |
+| NFR-video-review-004 | accuracy | Comment timecode equals the player position, to the second. Whether the position is taken when the comment is started or submitted, and how fractions of a second round, is TBD (OQ-12). | P0 | quote §1 "review video theo từng giây" |
 
 ## 5. Business Rules
 
@@ -58,7 +58,7 @@ Online video review: player with timeline markers, timecoded comments with Open/
 |----|------|---------|---------------|--------|
 | BR-video-review-001 | Every comment has a timecode and belongs to one round. | Comment saved | FR-video-review-005, FR-video-review-008 | board L66, L147 |
 | BR-video-review-002 | A new comment starts as Open. | Comment saved | FR-video-review-009 | board L80 |
-| BR-video-review-003 | Only one round is In Review at a time (from board sample). | Round status change | FR-video-review-011 | board L43–L45 (inferred — OQ-4) |
+| BR-video-review-003 | **Open — not a rule yet.** Whether only one round can be In Review at a time is TBD (OQ-4); the board sample shows one (L43–L45, sample data). | Round status change | FR-video-review-011 | board L43–L45 (sample) |
 | BR-video-review-004 | Comment author shows as "Client" or "Leap Up". | Comment shown | FR-video-review-008 | board L75, L118 |
 
 ## 6. Error Matrix
@@ -120,3 +120,9 @@ Open review → play → comment at timecode → marker → resolve → change l
 - [ ] OQ-7: Edit/delete/reply to comments.
 - [ ] OQ-8: Phone layout.
 - [ ] OQ-9: Wording E-video-review-001…004.
+- [ ] OQ-10: File ↔ review link — is a version the same record as the Outcome Development file; status sync; comments when the file is replaced; can Material videos be reviewed? Shared with project-files OQ-17 (review SBA-12). Before Sprint 1.
+- [ ] OQ-11: May users comment on a past (Reviewed) round, an Upcoming round with no video, or a replaced version? (brainstorm OQ-8, portal OQ-13; restored by review SBA-13).
+- [ ] OQ-12: Timecode capture — moment the comment is started or submitted while the video keeps playing; rounding of fractional seconds (review SBA-23, QA-6).
+- [ ] OQ-13: Which status lines the round change log can show in Phase 1 — board text such as "Awaiting client approval" (L192) belongs to Outcome Approval (P2) (review SBA-10, QA-4).
+- [ ] OQ-14: Without realtime updates (quote §7), how do users see comments or resolves made by others at the same time — on reload? Two people resolving the same comment? (portal OQ-15; review SBA-16).
+- [ ] OQ-15: Comment submit control — Enter key or a button; not on the board (L147) (review UX-8).

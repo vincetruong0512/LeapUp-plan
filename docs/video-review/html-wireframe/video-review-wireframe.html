@@ -58,16 +58,18 @@
     <div class="toc-brand">
       <div class="toc-feature">video-review</div>
       <div class="toc-title">Wireframe</div>
-      <div class="toc-meta">1 flows · 3 screens · desktop</div>
+      <div class="toc-meta">1 flows · 5 screens · desktop</div>
     </div>
 
     <a class="active" data-view="overview">▤ Overview (user flow)</a>
 
-    <div class="toc-section">Flow 1 · Review a round with timecoded comments <span class="flow-count">3</span></div>
+    <div class="toc-section">Flow 1 · Review a round with timecoded comments <span class="flow-count">5</span></div>
 <a data-view="flow" data-src="review.html">Review a round with timecoded comments</a>
 <a class="screen" data-view="flow" data-src="review.html" data-scroll="1">video-review</a>
 <a class="screen" data-view="flow" data-src="review.html" data-scroll="2">video-review-no-video</a>
 <a class="screen" data-view="flow" data-src="review.html" data-scroll="3">video-review-error</a>
+<a class="screen" data-view="flow" data-src="review.html" data-scroll="4">video-review-no-comments</a>
+<a class="screen" data-view="flow" data-src="review.html" data-scroll="5">video-review-empty-comment</a>
   </nav>
 
   <div class="main">
@@ -87,7 +89,7 @@
           <span><i class="chip error"></i> Error</span>
         </div>
         <div class="flowmap">
-          <div class="flowgroup"><h3>Flow 1 — Review a round with timecoded comments</h3><div class="cover">happy: video-review · edge: no video · error: playback error</div><div class="chain"><a class="node" data-view="flow" data-src="review.html" data-scroll="1"><span class="n">1</span>video-review</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="review.html" data-scroll="2"><span class="n">2</span>video-review-no-video</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="review.html" data-scroll="3"><span class="n">3</span>video-review-error</a></div></div>
+          <div class="flowgroup"><h3>Flow 1 — Review a round with timecoded comments</h3><div class="cover">happy: video-review · edge: no video, no comments · error: playback error, empty comment</div><div class="chain"><a class="node" data-view="flow" data-src="review.html" data-scroll="1"><span class="n">1</span>video-review</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="review.html" data-scroll="2"><span class="n">2</span>video-review-no-video</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="review.html" data-scroll="3"><span class="n">3</span>video-review-error</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="review.html" data-scroll="4"><span class="n">4</span>video-review-no-comments</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="review.html" data-scroll="5"><span class="n">5</span>video-review-empty-comment</a></div></div>
         </div>
       </div>
       <!-- FLOW iframe -->

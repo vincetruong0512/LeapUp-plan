@@ -17,7 +17,7 @@ links:
 
 **Tag:** MVP — the overview frames Phase 1 and shows Phase 2 and excluded items for context (quote p.1–2, §7).
 
-**Open decisions touching the whole portal:** C3 admin design, C4 roles, C7 Project Info tab block the MVP; C1, C2, C5, C6, C9 affect Phase 2. All are listed in §11 Open Points — none decided yet.
+**Open decisions touching the whole portal:** C3 admin design and C7 Project Info tab block the MVP (C4 roles provisionally decided 2026-11-21 — OQ-3); C1, C2, C5, C6, C9 affect Phase 2. All are listed in §11 Open Points — none decided yet.
 
 ## 1. Idea Seed
 
@@ -39,11 +39,11 @@ In short: one place where Leap Up and its clients run a video production project
 | User Type | Pain Point | Primary Need |
 |-----------|-----------|--------------|
 | Leap Up account / project staff | Feedback scattered across channels; unclear which version a comment refers to (assumed — OQ-1) | One place per project to share files, collect timecoded feedback and track rounds |
-| Leap Up admin | Must give each client access only to their own project (board L159, L170) | Create projects and client accounts, assign members (quote P1 #1) |
+| Admin (Leap Up) | Must give each client access only to their own project (board L159, L170) | Create projects and client accounts, assign members (quote P1 #1) |
 | Client reviewer | Hard to point at the exact moment in a video that needs changing (assumed — OQ-1) | Review a video and pin comments to exact timecodes (board L26) |
 | Client final approver | Needs a clear record of what was approved (Phase 2) | Approve versions and sign off the final cut (quote P2 #3) |
 
-Role details (single client role vs named approvers) are open — OQ-3.
+Roles decided 2026-11-21: Admin, Leap Up member, Client (OQ-3). Role names follow the feature specs.
 
 ## 4. Capabilities Breakdown
 
@@ -125,7 +125,7 @@ Dashboard and Action Required → task list → production timeline with 5 stage
 
 ### 6.2 Scenario Matrix (roles × actions)
 
-| Action | Leap Up admin | Leap Up staff | Client |
+| Action | Admin | Leap Up member | Client |
 |---|---|---|---|
 | Create project / client account / assign members | Yes (quote P1 #1) | OQ-4 | No |
 | See a project | All | Assigned (assumed) | Assigned only (board L146) |
@@ -254,9 +254,9 @@ Questions to take to Leap Up. Tick each one when answered and note the answer ne
 * [ ] OQ-2: Why now, and is there a launch date? Which pilot clients and how many projects in the first month?
 
 ### B. Roles & access
-* [ ] OQ-3 (C4, blocks MVP): Roles in the MVP — (a) Leap Up / Client only, (b) plus a Leap Up admin, or (c) the board's named roles (Brand Manager final approver, Marketing Exec reviewer, Account, Producer)?
+* [x] OQ-3 (C4): **Decided 2026-11-21 (auth-access brainstorm OQ-2): MVP roles are Admin, Leap Up member, Client**; named approvers are not MVP roles. Original question: Roles in the MVP — (a) Leap Up / Client only, (b) plus a Leap Up admin, or (c) the board's named roles (Brand Manager final approver, Marketing Exec reviewer, Account, Producer)?
 * [ ] OQ-4 (C3, blocks MVP): Who administers — one Leap Up admin or any Leap Up staff? What does the admin page need (no wireframe exists)?
-* [ ] OQ-5: One login per client person for all their projects, or one per project (board L159)? Who resets a forgotten password in the MVP?
+* [x] OQ-5: **Decided 2026-11-21 (auth-access brainstorm OQ-3, OQ-8): one User ID per person for all their projects; the Leap Up admin resets a forgotten password** (how: admin OQ-5). Original question: one login per client person or per project (board L159)? Who resets a forgotten password?
 * [ ] OQ-6: Roughly how many of the ~50 users are Leap Up staff vs client users?
 * [ ] OQ-7 (C7, blocks MVP): What goes in the "Project Info" tab of the project screen (board L34)?
 

@@ -34,7 +34,7 @@ Sign in with a User ID and password issued by Leap Up, project-scoped access for
 | FR-auth-access-003 | Required fields | If User ID or Password is empty when Sign In is pressed, then the system shall not check the credentials and shall show E-auth-access-002. | MVP | P0 | test | brainstorm D1 |
 | FR-auth-access-004 | Wrong credentials | If the User ID and password do not match an account, then the system shall keep the user on Login and show E-auth-access-001. | MVP | P0 | test | brainstorm D2 |
 | FR-auth-access-005 | User ID not case-sensitive | The system shall match the User ID regardless of upper/lower case. | MVP | P1 | test | brainstorm OQ-4 (user decision) |
-| FR-auth-access-006 | Assigned projects only | After sign-in, the system shall show a user only the projects they are assigned to; an Admin sees all projects. | MVP | P0 | test | quote P1 #1; board L146, L170 |
+| FR-auth-access-006 | Assigned projects only | After sign-in, the system shall show a user only the projects they are assigned to. Whether an Admin sees all projects is TBD (OQ-10). | MVP | P0 | test | quote P1 #1; board L146, L170 |
 | FR-auth-access-007 | Landing page | After sign-in the user lands on a landing page — which page is TBD (OQ-1). | MVP | P0 | demo | brainstorm OQ-17 |
 | FR-auth-access-008 | No assigned projects | If a signed-in user has no assigned project, then the system shall show a "no projects" state (wording TBD, E-auth-access-004). | MVP | P1 | test | brainstorm D4 |
 | FR-auth-access-009 | Access check on every request | If a user requests a project, file, video or comment of a project they are not assigned to, then the system shall refuse it (E-auth-access-003). | MVP | P0 | test | board L146, L170; brainstorm R1 |
@@ -58,15 +58,15 @@ Sign in with a User ID and password issued by Leap Up, project-scoped access for
 | BR-auth-access-001 | Only Leap Up creates accounts; there is no self sign-up. | Any new user | FR-auth-access-001 | board L159 |
 | BR-auth-access-002 | Access is project-specific: a Client or Leap Up member sees only content of projects they are assigned to. | Every request | FR-auth-access-006, FR-auth-access-009 | board L146, L170 |
 | BR-auth-access-003 | One User ID per person covers all of that person's projects. | Account creation | FR-auth-access-001 | brainstorm OQ-3 (user decision) |
-| BR-auth-access-004 | Users cannot change or recover their own password in the MVP; Leap Up admin resets it. | Forgotten password | FR-auth-access-001 | brainstorm OQ-7, OQ-8 |
+| BR-auth-access-004 | Users cannot change or recover their own password in the MVP; Leap Up admin resets it. How the admin resets it is TBD (admin OQ-5). | Forgotten password | FR-auth-access-001 | brainstorm OQ-7, OQ-8 (user decision 2026-11-21) |
 
 ## 6. Error Matrix
 
 | Error ID | Title | Trigger | Severity | Related FR | Wording (exact) | Screen state | Recovery |
 |----------|-------|---------|----------|------------|-----------------|--------------|----------|
-| E-auth-access-001 | Wrong credentials | User ID + password don't match | major | FR-auth-access-004 | TBD | Login, fields kept (User ID) — TBD | Re-enter; contact Leap Up |
+| E-auth-access-001 | Wrong credentials | User ID + password don't match | major | FR-auth-access-004 | TBD; whether it may reveal that the User ID exists: TBD (OQ-13) | Login, fields kept (User ID) — TBD (OQ-13) | Re-enter; contact Leap Up |
 | E-auth-access-002 | Empty field | Sign In with an empty field | minor | FR-auth-access-003 | TBD | Login | Fill the field |
-| E-auth-access-003 | Not assigned | Request for a project the user isn't assigned to | critical | FR-auth-access-009 | TBD | TBD | Back to the user's projects |
+| E-auth-access-003 | Not assigned | Request for a project, file, video or comment of a project the user isn't assigned to, or any portal page while signed out | critical | FR-auth-access-009 | TBD | No project content returned; refusal state not on the board (TBD) | Back to the user's projects; signed out → Login |
 | E-auth-access-004 | No projects | Signed-in user has no assigned project | minor | FR-auth-access-008 | TBD | Landing, empty | Contact Leap Up |
 
 ## 7. Success Criteria
@@ -78,7 +78,8 @@ Sign in with a User ID and password issued by Leap Up, project-scoped access for
 
 ## 8. Data Entities (summary)
 
-- **User account:** User ID, password (protected), display name, role (Admin / Leap Up member / Client), active or not.
+- **User account:** User ID, password (protected), display name, role (Admin / Leap Up member / Client), active or not (deactivation TBD, OQ-8).
+- How the account role relates to the project role (can one person be Leap Up on one project and Client on another?) is TBD (OQ-10).
 - **Project membership:** user, project, role in the project (Leap Up / Client).
 
 ## 9. Flows (summary)
@@ -92,6 +93,7 @@ Sign in → (error | no projects | landing) · sign out → Login. Details in `a
 | Login | 01 (L18–L170) | As drawn |
 | Login — error state | not drawn | Message position and wording TBD |
 | Landing | not drawn | TBD (OQ-1) |
+| Not assigned (refusal) | not drawn | E-auth-access-003; shared by project-files, video-review and admin |
 
 ## 11. Constraints, Dependencies & Assumptions
 
@@ -128,3 +130,10 @@ Sign in → (error | no projects | landing) · sign out → Login. Details in `a
 - [ ] OQ-7: Password rules (brainstorm OQ-5).
 - [ ] OQ-8: Account deactivation — not in the reference; needed? (brainstorm OQ-11; feature `admin`).
 - [ ] OQ-9: Access-note wording vs one User ID per person (brainstorm OQ-3, R5).
+- [ ] OQ-10: Account role vs project role — does an Admin see all projects; can one person be Leap Up on one project and Client on another? (review SBA-3, SBA-4; the brainstorm matrix §6.2 assumes "Admin: all"). Owner: Leap Up.
+- [ ] OQ-11: User removed from a project, or project closed, while signed in (brainstorm OQ-19; restored by review SBA-14).
+- [ ] OQ-12: Show-toggle label in the shown state, and accessibility (brainstorm OQ-24; restored by review SBA-14).
+- [ ] OQ-13: Sign-in error — position, whether the User ID is kept, and whether the message may reveal that a User ID exists (review UX-12, FLOW-12).
+- [ ] OQ-14: A signed-in user who opens the Login page — stay signed in or show Login? (review FLOW-12).
+
+Brainstorm ↔ spec crosswalk (review SBA-21): brainstorm E-01 = E-auth-access-001 · brainstorm E-02 (deactivated) = no code; only if OQ-8 keeps deactivation · brainstorm E-03 = E-auth-access-002. Spec OQ-3 = brainstorm OQ-9 · OQ-4 = OQ-13–OQ-15 · OQ-5 = OQ-22 · OQ-6 = OQ-10, OQ-18, OQ-21 · OQ-7 = OQ-5 · OQ-8 = OQ-11 · OQ-9 = OQ-3.

@@ -27,10 +27,10 @@ Admin page to create projects, create client accounts and assign members per pro
 
 | ID | Title | Description | Scope | Priority | Verify by | Source |
 |----|-------|-------------|-------|----------|-----------|--------|
-| FR-admin-001 | Admin page access | Only an Admin can open the admin page. | MVP | P0 | test | quote P1 #1; auth-access FR-010 |
+| FR-admin-001 | Admin page access | A Client cannot open the admin page or send an admin request (E-admin-003). Whether Leap Up members have admin rights is TBD (OQ-2). | MVP | P0 | test | quote P1 #1; auth-access FR-010 |
 | FR-admin-002 | Create project | Admin creates a project with its details (field list TBD, OQ-3). | MVP | P0 | demo | quote P1 #1; board L16, L22, L24 |
 | FR-admin-003 | Project folders | Every new project has the folders Proposal, Material, Outcome Development. | MVP | P0 | inspection | quote P1 #2; board L52–L54 |
-| FR-admin-004 | Initial project status | A new project shows status "In Progress". | MVP | P1 | demo | board L19 (other statuses TBD, OQ-3) |
+| FR-admin-004 | Initial project status | A new project gets an initial status. Which status is TBD (OQ-3); the board's sample project shows "In Progress" (L19, sample data L11). | MVP | P1 | demo | board L19 (sample) |
 | FR-admin-005 | Create client account | Admin creates a client account with a User ID and initial password. | MVP | P0 | demo | quote P1 #1; board L159 |
 | FR-admin-006 | Unique User ID | If the User ID already exists (case-insensitive), then the system shall refuse it (E-admin-002). | MVP | P0 | test | auth-access BR-003, FR-005 |
 | FR-admin-007 | Assign members | Admin assigns users to a project with role Leap Up or Client. | MVP | P0 | demo | quote P1 #1 |
@@ -57,7 +57,8 @@ Admin page to create projects, create client accounts and assign members per pro
 |----------|-------|---------|----------|------------|-----------------|--------------|----------|
 | E-admin-001 | Required field empty | Save with an empty required field | minor | FR-admin-008 | TBD | Form stays open | Fill the field |
 | E-admin-002 | User ID taken | User ID already exists | major | FR-admin-006 | TBD | Form stays open | Choose another User ID |
-| E-admin-003 | Not an Admin | Non-admin opens the admin page | critical | FR-admin-001 | TBD | TBD | Back to user's projects |
+| E-admin-003 | Not an Admin | Non-admin opens the admin page or sends an admin request directly | critical | FR-admin-001 | TBD | TBD | Back to user's projects |
+| — (gap) | Assignment errors | User already a member, unknown user, assigning an Admin | — | FR-admin-007 | TBD | TBD | TBD (OQ-10) |
 
 ## 7. Success Criteria
 
@@ -74,7 +75,8 @@ Admin page to create projects, create client accounts and assign members per pro
 
 ## 9. Flows (summary)
 
-Create project → create client account → assign members → hand over details outside the portal.
+Create project · create client account · assign members — independent admin actions; the order is not set by the
+reference (OQ-11; proposal PR3 suggests a wizard). Login details are handed over outside the portal.
 
 ## 10. Screens (summary)
 
@@ -97,11 +99,14 @@ No board design (C3). Screens TBD: admin home, project form, account form, membe
 ## 12. Open Questions
 
 - [ ] OQ-1 (C3): Admin screen design and entry point.
-- [ ] OQ-2: Admin rights for Leap Up members; creating Leap Up member accounts.
-- [ ] OQ-3: Project fields and statuses beyond "In Progress"; edit/close project.
-- [ ] OQ-4: Initial password handling.
-- [ ] OQ-5: Admin password reset.
+- [ ] OQ-2: Admin rights for Leap Up members; how Leap Up member accounts and the first Admin account are created (quote names only "tài khoản client"; review SBA-2). Owner: Leap Up. Before Sprint 1.
+- [ ] OQ-3: Project fields, which are required, and the initial status (board sample "In Progress", L19); statuses beyond it; edit/close project.
+- [ ] OQ-4: Initial password handling and password rules (with auth-access OQ-7).
+- [ ] OQ-5: Password reset — decided that the Leap Up admin resets it (auth-access brainstorm OQ-8, BR-auth-access-004). Still TBD: how (screen, steps). No FR yet; add one when answered.
 - [ ] OQ-6: Remove member / deactivate account.
 - [ ] OQ-7: Admin lists and search.
 - [ ] OQ-8 (C7): Project Info tab content.
 - [ ] OQ-9: All admin wording (E-admin-001…003).
+- [ ] OQ-10: Assignment errors and limits — user already a member, unknown user, assigning an Admin; error codes and wording (review QA-15).
+- [ ] OQ-11: Order of set-up actions and where the admin page is entered from (review FLOW-11; C3; proposal PR3).
+- [ ] OQ-12: What an Admin's uploads and comments show as "Uploaded By" / author, since Admin is not a project role (review SBA-18; see auth-access OQ-10).

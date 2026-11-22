@@ -58,17 +58,19 @@
     <div class="toc-brand">
       <div class="toc-feature">project-files</div>
       <div class="toc-title">Wireframe</div>
-      <div class="toc-meta">1 flows · 4 screens · desktop</div>
+      <div class="toc-meta">1 flows · 6 screens · desktop</div>
     </div>
 
     <a class="active" data-view="overview">▤ Overview (user flow)</a>
 
-    <div class="toc-section">Flow 1 · Share, find and download files <span class="flow-count">4</span></div>
+    <div class="toc-section">Flow 1 · Share, find and download files <span class="flow-count">6</span></div>
 <a data-view="flow" data-src="files.html">Share, find and download files</a>
 <a class="screen" data-view="flow" data-src="files.html" data-scroll="1">project-files</a>
-<a class="screen" data-view="flow" data-src="files.html" data-scroll="2">project-files-empty</a>
-<a class="screen" data-view="flow" data-src="files.html" data-scroll="3">upload</a>
-<a class="screen" data-view="flow" data-src="files.html" data-scroll="4">upload-error</a>
+<a class="screen" data-view="flow" data-src="files.html" data-scroll="2">no-result</a>
+<a class="screen" data-view="flow" data-src="files.html" data-scroll="3">empty-folder</a>
+<a class="screen" data-view="flow" data-src="files.html" data-scroll="4">upload</a>
+<a class="screen" data-view="flow" data-src="files.html" data-scroll="5">upload-rejected</a>
+<a class="screen" data-view="flow" data-src="files.html" data-scroll="6">upload-failed</a>
   </nav>
 
   <div class="main">
@@ -88,7 +90,7 @@
           <span><i class="chip error"></i> Error</span>
         </div>
         <div class="flowmap">
-          <div class="flowgroup"><h3>Flow 1 — Share, find and download files</h3><div class="cover">happy: project-files → upload → project-files · edge: empty · error: upload-error</div><div class="chain"><a class="node" data-view="flow" data-src="files.html" data-scroll="1"><span class="n">1</span>project-files</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="files.html" data-scroll="2"><span class="n">2</span>project-files-empty</a><span class="arrow">→</span><a class="node" data-view="flow" data-src="files.html" data-scroll="3"><span class="n">3</span>upload</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="files.html" data-scroll="4"><span class="n">4</span>upload-error</a></div></div>
+          <div class="flowgroup"><h3>Flow 1 — Share, find and download files</h3><div class="cover">happy: project-files → upload → project-files · edge: no-result, empty-folder · error: upload-rejected, upload-failed</div><div class="chain"><a class="node" data-view="flow" data-src="files.html" data-scroll="1"><span class="n">1</span>project-files</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="files.html" data-scroll="2"><span class="n">2</span>no-result</a><span class="arrow">→</span><a class="node edge" data-view="flow" data-src="files.html" data-scroll="3"><span class="n">3</span>empty-folder</a><span class="arrow">→</span><a class="node" data-view="flow" data-src="files.html" data-scroll="4"><span class="n">4</span>upload</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="files.html" data-scroll="5"><span class="n">5</span>upload-rejected</a><span class="arrow">→</span><a class="node error" data-view="flow" data-src="files.html" data-scroll="6"><span class="n">6</span>upload-failed</a></div></div>
         </div>
       </div>
       <!-- FLOW iframe -->

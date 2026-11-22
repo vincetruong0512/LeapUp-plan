@@ -17,8 +17,8 @@ Built from the draft SRS (status: draft). Stories are backlog drafts; 🔴 open 
 | # | ID | Title | Persona | Covers FR | Scope | Screens | Priority | Status | Jira | Updated |
 |---|----|-------|---------|-----------|-------|---------|----------|--------|------|---------|
 | 1 | [US-001](us-001.md) | See a project's folders and files | Client | FR-project-files-001, FR-project-files-002, FR-project-files-003, FR-project-files-004, FR-project-files-005, FR-project-files-008, FR-project-files-009, FR-project-files-013 | MVP | project-files | P0 | draft | — | 2026-11-22 |
-| 2 | [US-002](us-002.md) | Upload files into a folder | Leap Up member | FR-project-files-006, FR-project-files-007 | MVP | upload, upload-error | P0 | draft | — | 2026-11-22 |
-| 3 | [US-003](us-003.md) | Find files by search or folder | Client | FR-project-files-010, FR-project-files-012 | MVP | project-files, project-files-empty | P0 | draft | — | 2026-11-22 |
+| 2 | [US-002](us-002.md) | Upload files into a folder | Leap Up member | FR-project-files-006, FR-project-files-007, FR-project-files-008 | MVP | upload, upload-rejected, upload-failed | P0 | draft | — | 2026-11-22 |
+| 3 | [US-003](us-003.md) | Find files by search or folder | Client | FR-project-files-010, FR-project-files-012 | MVP | project-files, no-result, empty-folder | P0 | draft | — | 2026-11-22 |
 | 4 | [US-004](us-004.md) | Download a file | Client | FR-project-files-011 | MVP | project-files | P0 | draft | — | 2026-11-22 |
 | 5 | [US-005](us-005.md) | Open a video for review | Client | FR-project-files-014 | MVP | project-files | P1 | draft | — | 2026-11-22 |
 

@@ -42,9 +42,17 @@ The user needs a file of their project.
 - 4b1. Portal shows an empty table (E-project-files-004).
 - 4b2. Resume at step 3.
 
+**5a. The file is a video in Outcome Development (provisional — FR-project-files-014, spec OQ-8):**
+- 5a1. User opens the video instead of downloading it.
+- 5a2. Portal opens Video Review on that video; which round opens is TBD (spec OQ-8, OQ-17).
+- 5a3. Use case continues in video-review UC-video-review-01.
+
+**5b. Download fails (spec OQ-15):**
+- 5b1. Behaviour, error code and wording TBD.
+
 ## Related Requirements
 
-- FR: [FR-project-files-001](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-002](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-003](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-004](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-005](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-008](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-009](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-010](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-011](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-012](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-013](../srs/project-files-spec.md#3-functional-requirements-fr)
+- FR: [FR-project-files-001](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-002](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-003](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-004](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-005](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-008](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-009](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-010](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-011](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-012](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-013](../srs/project-files-spec.md#3-functional-requirements-fr), [FR-project-files-014](../srs/project-files-spec.md#3-functional-requirements-fr) (provisional)
 - BR: BR-project-files-001, BR-project-files-002, BR-project-files-003
 - Errors: E-project-files-002, E-project-files-004 (wording in the spec Error Matrix — TBD)
-- Stories: US-001, US-003, US-004 · Diagram: [Find and download a file (Activity)](../srs/project-files-flows.md)
+- Stories: US-001, US-003, US-004, US-005 · Diagram: [Find and download a file (Activity)](../srs/project-files-flows.md)
