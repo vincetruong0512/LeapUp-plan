@@ -17,4 +17,6 @@ Project-level overview of the Leap Up Client Project Portal (scope: MVP framing)
 
 - [delivery-plan.md](delivery-plan.md) — phases, 8-week timeline, story order, open points by sprint, document index.
 - [technical-solution-design.md](technical-solution-design.md) — technical proposal (fixed quote constraints vs proposals).
+- [portal-userflow.md](portal-userflow.md) — end-to-end user journeys per role (Admin, Leap Up member, Client), MVP + P2, stitched from the feature user flows; drawn in Figma page "User Flows" (draft 2026-11-22).
+- [design-rules.md](design-rules.md) — design rules mirrored from the Figma design system (draft 2026-11-22).
 - [prototype/portal-prototype.html](prototype/portal-prototype.html) — clickable prototype of all quoted MVP + P2 flows (`/prototype-html portal`, draft 2026-11-22). Open it in a browser; sample users in the floating menu's Off-screen tab (password `demo`).
