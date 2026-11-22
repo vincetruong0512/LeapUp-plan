@@ -320,6 +320,9 @@ flowchart TD
   class noProj,filesEmpty,noVideo,mayUpload,noUpload,mayResolve,noResolve,homeEmpty,mayApprove edge
 ```
 
+Easier-flow proposals PR1–PR5 (not part of the original requirements; need Leap Up approval) are drawn
+below these journeys in Figma and listed in [screen-design.md §2](screen-design.md).
+
 ## 4. Counts (check against Figma)
 
 | Journey | Nodes | Edges | Return edges | Figma frame |

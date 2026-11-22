@@ -6,19 +6,22 @@
   Scope: MVP (auth-access, admin, project-files, video-review) + P2 (dashboard-tasks, production-timeline,
   outcome-approval, email-notifications as an outbox). OUT features are not prototyped.
   Anything not stated in the quote/board shows a "TBD" tag. Error codes live in JS comments only.
+  Styled 2026-11-22 with docs/portal/design-rules.md (brand #2DC75C, Inter) at the user's request;
+  flows and content unchanged. Status colours follow board L128 (green done, yellow in review, red missing).
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leap Up Portal — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   /* ══════════ LAYER 1: SHELL CHROME (neutral B&W — never app tokens) ══════════ */
   :root { --chrome-bg: #f4f4f4; --chrome-panel: #fff; --chrome-line: #ccc; --chrome-ink: #000; --chrome-muted: #777; }
   html { font-size: 14px; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--chrome-bg); color: var(--chrome-ink); min-height: 100vh; }
+  body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--chrome-bg); color: var(--chrome-ink); min-height: 100vh; }
   .proto-stage { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; }
   .proto-app { min-width: 0; width: min(var(--device-w, 375px), 100%); background: var(--bg); position: relative; display: flex; flex-direction: column; overflow: hidden; }
   .proto-stage[data-device="desktop"] .proto-app { width: min(1024px, 100%); min-height: calc(100vh - 64px); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
@@ -65,24 +68,35 @@
   .panel-reset:hover { border-color: #000; color: #000; }
   .demo-notice { position: fixed; left: 12px; bottom: 12px; z-index: 700; background: rgba(255,255,255,0.9); border: 1px solid var(--chrome-line); color: var(--chrome-muted); font-size: 10px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; pointer-events: none; opacity: 0.75; }
 
-  /* ══════════ LAYER 2: APP (greyscale tokens — no design.md, no brand colours: TBD) ══════════ */
+  /* ══════════ LAYER 2: APP (tokens from docs/portal/design-rules.md = Figma "DS · System") ══════════
+     Brand #2DC75C = primary/400 (sampled from the Miro board). Inter. Status colour rule: every success
+     state also carries an icon or word (design-rules §2). Dark theme is not designed (O4): neutral mapping only. */
   :root {
-    --palette-0: #ffffff; --palette-50: #f7f7f7; --palette-100: #efefef; --palette-200: #e2e2e2; --palette-300: #cfcfcf;
-    --palette-400: #a8a8a8; --palette-500: #7a7a7a; --palette-600: #555555; --palette-700: #3d3d3d; --palette-800: #262626; --palette-900: #111111;
+    --palette-0: #ffffff; --palette-50: #f8fbf8; --palette-100: #eff6f0; --palette-200: #e2eae3; --palette-300: #cfd7d0;
+    --palette-400: #9ca39d; --palette-500: #6f756f; --palette-600: #4e544f; --palette-700: #3c423c; --palette-800: #222823; --palette-900: #141914; --palette-950: #090b09;
+    --brand-50: #e7fce9; --brand-100: #cdf7d2; --brand-200: #a7edb2; --brand-400: #2dc75c; --brand-500: #00af48; --brand-600: #00913b; --brand-700: #00762e;
+    --success-50: #eafbec; --success-700: #007631; --warning-50: #fff6b6; --warning-700: #914d00;
+    --error-50: #fff2f0; --error-600: #dc2626; --error-700: #b80411; --info-50: #f1f6ff; --info-200: #c6daff; --info-600: #2563eb;
   }
   :root, [data-theme="light"] {
     color-scheme: light;
     --bg: var(--palette-50); --surface: var(--palette-0); --soft: var(--palette-100); --ink: var(--palette-900);
-    --muted: var(--palette-600); --line: var(--palette-200); --line-strong: var(--palette-400);
-    --accent: var(--palette-900); --accent-ink: var(--palette-0); --frame: var(--palette-800); --frame-ink: var(--palette-300);
-    --focus-ring: var(--palette-900);
+    --muted: var(--palette-600); --line: var(--palette-200); --line-strong: var(--palette-500);
+    --accent: var(--brand-600); --accent-hover: var(--brand-500); --accent-ink: var(--palette-950); --accent-soft: var(--brand-100); --accent-soft-ink: var(--brand-700);
+    --frame: var(--palette-800); --frame-ink: var(--palette-300);
+    --focus-ring: var(--brand-600);
+    --ok-bg: var(--success-50); --ok-ink: var(--success-700); --warn-bg: var(--warning-50); --warn-ink: var(--warning-700);
+    --err-bg: var(--error-50); --err-line: var(--error-600); --err-ink: var(--error-700); --info-bg: var(--info-50); --info-line: var(--info-200);
   }
   [data-theme="dark"] {
     color-scheme: dark;
     --bg: var(--palette-900); --surface: var(--palette-800); --soft: var(--palette-700); --ink: var(--palette-50);
     --muted: var(--palette-300); --line: var(--palette-700); --line-strong: var(--palette-500);
-    --accent: var(--palette-50); --accent-ink: var(--palette-900); --frame: var(--palette-0); --frame-ink: var(--palette-600);
-    --focus-ring: var(--palette-0);
+    --accent: var(--brand-400); --accent-hover: var(--brand-200); --accent-ink: var(--palette-950); --accent-soft: var(--palette-700); --accent-soft-ink: var(--brand-200);
+    --frame: var(--palette-950); --frame-ink: var(--palette-400);
+    --focus-ring: var(--brand-400);
+    --ok-bg: var(--palette-700); --ok-ink: var(--brand-200); --warn-bg: var(--palette-700); --warn-ink: var(--warning-50);
+    --err-bg: var(--palette-700); --err-line: var(--error-600); --err-ink: var(--error-50); --info-bg: var(--palette-700); --info-line: var(--palette-500);
   }
   [data-theme] { background-color: var(--bg); color: var(--ink); }
   dialog { margin: auto; border: none; padding: 0; background: transparent; max-width: calc(100% - 32px); }
@@ -102,7 +116,7 @@
   .nav { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; color: var(--ink); text-decoration: none; cursor: pointer; font-size: 13px; background: none; border: none; font-family: inherit; text-align: left; width: 100%; }
   .nav svg { width: 16px; height: 16px; flex: none; }
   .nav:hover { background: var(--soft); }
-  .nav.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .nav.active { background: var(--accent-soft); color: var(--accent-soft-ink); font-weight: 600; }
   .side-foot { margin-top: auto; border-top: 1px solid var(--line); padding-top: 12px; font-size: 12px; }
   .side-foot .u { font-weight: 600; margin: 0 8px; }
   .side-foot .r { color: var(--muted); margin: 2px 8px 8px; }
@@ -130,6 +144,7 @@
   .btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-family: inherit; cursor: pointer; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); font-weight: 600; }
   .btn svg { width: 15px; height: 15px; }
   .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .btn-sm { padding: 4px 9px; font-size: 12px; border-radius: 6px; }
   .btn-ghost { border-color: var(--line-strong); font-weight: 500; }
   .btn-block { width: 100%; justify-content: center; padding: 11px; }
@@ -140,20 +155,22 @@
   label.field { display: block; margin-bottom: 14px; }
   .lbl { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
   .input, .select { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 11px; font: inherit; background: var(--surface); color: var(--ink); }
-  .input[aria-invalid="true"], .select[aria-invalid="true"] { border: 2px solid var(--ink); }
+  .input[aria-invalid="true"], .select[aria-invalid="true"] { border: 2px solid var(--err-line); }
   .pw-wrap { position: relative; }
   .pw-wrap .input { padding-right: 60px; }
   .pw-wrap .show { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; }
-  span.err-inline { display: none; font-size: 12px; margin-top: 5px; font-weight: 600; }
+  span.err-inline { display: none; color: var(--err-ink); font-size: 12px; margin-top: 5px; font-weight: 600; }
   span.err-inline.show { display: flex; gap: 6px; align-items: center; }
   span.err-inline::before, .banner.err::before { content: "!"; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; flex: none; border: 1.5px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 800; margin-right: 6px; vertical-align: -2px; }
   .banner { display: none; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.45; border: 1px solid var(--line-strong); background: var(--soft); }
   .banner.show { display: block; }
-  .banner.err { border: 2px solid var(--ink); background: var(--surface); }
+  .banner.err { border: 1px solid var(--err-line); background: var(--err-bg); color: var(--err-ink); }
   .tbd { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; border: 1px dashed var(--line-strong); color: var(--ink); border-radius: 3px; padding: 0 4px; vertical-align: middle; margin-left: 4px; cursor: help; }
   .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line-strong); white-space: nowrap; background: var(--surface); color: var(--ink); }
-  .pill.solid { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .pill.dash { border-style: dashed; }
+  .pill.solid { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-bg); }
+  .pill.dash { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-bg); }
+  .pill.prog { background: var(--brand-200); color: var(--brand-700); border-color: var(--brand-200); }
+  .pill.miss { background: var(--err-bg); color: var(--err-ink); border-color: var(--err-bg); }
   .pill.soft { background: var(--soft); border-color: var(--soft); color: var(--muted); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
   table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -166,7 +183,7 @@
   .empty svg { width: 28px; height: 28px; display: block; margin: 0 auto 8px; }
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 18px 0 4px; flex-wrap: wrap; }
   .tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 9px 12px; font: inherit; color: var(--muted); cursor: pointer; }
-  .tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+  .tab.active { color: var(--accent-soft-ink); border-bottom-color: var(--accent); font-weight: 700; }
   .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 800; background: var(--accent); color: var(--accent-ink); padding: 10px 16px; border-radius: 8px; font-size: 13px; display: none; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
   .toast.show { display: block; }
   .modal { background: var(--surface); color: var(--ink); border-radius: 12px; padding: 20px; width: 440px; max-width: 100%; }
@@ -179,10 +196,10 @@
   /* login */
   [data-screen="login"] { flex-direction: row; min-height: calc(100vh - 64px); }
   [data-screen="login"]:not(.active) { display: none; }
-  .login-brand { flex: 1; background: var(--soft); padding: 40px; display: flex; flex-direction: column; gap: 22px; }
+  .login-brand { flex: 1; background: var(--brand-50); padding: 40px; display: flex; flex-direction: column; gap: 22px; }
   .logo-ph { width: 120px; height: 44px; border: 1.5px dashed var(--line-strong); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); }
   .tagline { font-size: 30px; font-weight: 800; line-height: 1.15; }
-  .badge-box { border: 1px solid var(--line-strong); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; background: var(--surface); margin-top: auto; }
+  .badge-box { border: 1px solid var(--brand-200); border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; background: var(--brand-200); color: var(--brand-700); margin-top: auto; }
   .login-form { flex: 1; padding: 48px 40px; display: flex; align-items: center; }
   .login-form form { width: 100%; max-width: 340px; margin: 0 auto; }
   .eyebrow { font-size: 11px; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
@@ -192,7 +209,7 @@
 
   /* project files */
   .folder { text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
-  .folder.active { border: 2px solid var(--ink); }
+  .folder.active { border: 2px solid var(--accent); background: var(--brand-50); }
   .folder b { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
   .folder b svg { width: 18px; height: 18px; }
   .folder > span { display: block; font-size: 12px; color: var(--muted); line-height: 1.5; }
@@ -205,7 +222,7 @@
   @media (max-width: 900px) { .vr { grid-template-columns: minmax(0,1fr); } .rounds { flex-direction: row; overflow-x: auto; } .round { min-width: 130px; } }
   .rounds { display: flex; flex-direction: column; gap: 8px; }
   .round { text-align: left; font: inherit; color: var(--ink); cursor: pointer; padding: 10px; }
-  .round.active { border: 2px solid var(--ink); }
+  .round.active { border: 2px solid var(--info-line); background: var(--info-bg); }
   .round b { display: block; font-size: 13px; }
   .round span { font-size: 11px; color: var(--muted); }
   .player-file { font-size: 11px; letter-spacing: .6px; color: var(--muted); margin-bottom: 6px; font-weight: 700; }
@@ -214,9 +231,9 @@
   .frame .btn { letter-spacing: 0; }
   .track { position: relative; height: 34px; margin-top: 8px; cursor: pointer; }
   .track .bar { position: absolute; left: 0; right: 0; top: 6px; height: 6px; background: var(--line); border-radius: 3px; }
-  .track .fill { position: absolute; left: 0; top: 6px; height: 6px; background: var(--ink); border-radius: 3px; width: 0; }
+  .track .fill { position: absolute; left: 0; top: 6px; height: 6px; background: var(--brand-400); border-radius: 3px; width: 0; }
   .marker { position: absolute; top: 0; transform: translateX(-50%); background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; font: inherit; color: var(--ink); }
-  .marker i { width: 10px; height: 18px; border: 2px solid var(--ink); background: var(--surface); border-radius: 2px; display: block; }
+  .marker i { width: 10px; height: 18px; border: 2px solid var(--warn-ink); background: var(--warn-bg); border-radius: 2px; display: block; }
   .marker.resolved i { border-style: dashed; }
   .marker small { font-size: 9px; color: var(--muted); }
   .controls { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; font-size: 12px; }
@@ -225,7 +242,7 @@
   .add-c { display: flex; gap: 8px; margin-top: 12px; align-items: flex-start; }
   .add-c label { flex: 1; margin: 0; }
   .cmt { padding: 10px; margin-bottom: 8px; }
-  .cmt.focus { border: 2px solid var(--ink); }
+  .cmt.focus { border: 2px solid var(--accent); }
   .cmt-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
   .tc { font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 700; border: 1px solid var(--ink); border-radius: 4px; padding: 1px 5px; cursor: pointer; background: var(--surface); color: var(--ink); }
   .cmt p { font-size: 13px; line-height: 1.45; }
@@ -239,7 +256,7 @@
   .stat b { display: block; font-size: 28px; }
   .stat span { font-size: 12px; color: var(--muted); }
   .progress { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-  .progress i { display: block; height: 100%; background: var(--ink); }
+  .progress i { display: block; height: 100%; background: var(--brand-400); }
   .action { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .action:last-child { border-bottom: none; }
   .action .meta { flex: 1; font-size: 12px; color: var(--muted); line-height: 1.5; }
@@ -875,7 +892,7 @@ function renderProjects(){
     h += '<div class="card empty" style="margin-top:18px">' + ic("lock") + "<b>You have no project yet.</b><br>Leap Up will add you to your project. Contact your Leap Up account manager. " + tbd("Wording TBD") + "</div>";
   } else {
     h += '<div class="grid" style="margin-top:18px">' + ps.map(p =>
-      '<button class="card folder" onclick="openProject(\'' + p.id + '\')"><b>' + ic("folder") + esc(p.code) + '</b><span>' + (p.title ? esc(p.title) + "<br>" : "") + "Client: " + esc(p.client) + " | Due: " + esc(p.due || "TBD") + '</span><span style="margin-top:8px"><span class="pill">' + esc(p.status) + "</span> " + (isAdmin() ? "" : '<span class="pill soft">' + esc(L.side[roleIn(p.id)]) + "</span>") + "</span></button>").join("") + "</div>";
+      '<button class="card folder" onclick="openProject(\'' + p.id + '\')"><b>' + ic("folder") + esc(p.code) + '</b><span>' + (p.title ? esc(p.title) + "<br>" : "") + "Client: " + esc(p.client) + " | Due: " + esc(p.due || "TBD") + '</span><span style="margin-top:8px"><span class="pill prog">' + esc(p.status) + "</span> " + (isAdmin() ? "" : '<span class="pill soft">' + esc(L.side[roleIn(p.id)]) + "</span>") + "</span></button>").join("") + "</div>";
   }
   sec("projects").innerHTML = h;
 }
@@ -892,7 +909,7 @@ function renderDenied(){
 function renderProject(){
   const p = proj(); const tab = S().ui.ptab || "files";
   let h = crumbs([["Projects", "projects"], [p.code]]);
-  h += '<h1 class="page">' + esc(p.code) + ' <span class="pill">' + esc(p.status) + "</span></h1>";
+  h += '<h1 class="page">' + esc(p.code) + ' <span class="pill prog">' + esc(p.status) + "</span></h1>";
   h += '<p class="sub">Client: ' + esc(p.client) + " | Due: " + esc(p.due || "TBD") + "</p>";
   h += '<div class="tabs">' + [["files", "Project Files"], ["tasks", "Task List"], ["info", "Project Info"]].map(t =>
     '<button class="tab' + (tab === t[0] ? " active" : "") + '" aria-pressed="' + (tab === t[0]) + '" onclick="setPtab(\'' + t[0] + '\')">' + t[1] + "</button>").join("") + "</div>";
@@ -987,7 +1004,7 @@ function renderVideo(){
   const p = proj(); const rs = rounds(); const n = currentRoundN(); const r = rs.find(x => x.n === n);
   const leap = mySide(p.id) === "leapup";
   let h = crumbs([["Projects", "projects"], [p.code, "project"], ["Outcome Development"], ["Video Review"]]);
-  h += '<h1 class="page">Video Review <span class="pill">Round ' + n + "</span></h1>";
+  h += '<h1 class="page">Video Review <span class="pill dash">Round ' + n + "</span></h1>";
   h += '<p class="sub"><b>' + projLine(p) + "</b><br>Review video, pin feedback to exact timecodes, and track revisions</p>";
   h += '<div class="vr"><div><div class="section-h" style="margin-top:0">Version history</div><div class="rounds">' + rs.map(x =>
       '<button class="card round' + (x.n === n ? " active" : "") + '" aria-pressed="' + (x.n === n) + '" onclick="selectRound(' + x.n + ')"><b>Round ' + x.n + (x.approved ? " " + ic("check") : "") + "</b><span>" + esc(L.round[x.status]) + " | " + esc(x.date || "Pending") + "</span></button>").join("") + "</div>";
@@ -1197,7 +1214,7 @@ function renderTimeline(){
     "<tr><td>" + esc(m.name) + "</td><td>" + esc(L.side[m.owner]) + "</td><td>" + esc(m.due) + "</td><td>" + (leap ? '<select class="select" aria-label="Milestone status" onchange="setMs(' + i + ',this.value)">' + opts(L.ms, m.status) + "</select>" : '<span class="pill ' + (m.status === "done" ? "solid" : m.status === "not_started" ? "soft" : "dash") + '">' + esc(L.ms[m.status]) + "</span>") + "</td></tr>").join("") + "</tbody></table></div></div>";
   const clientSide = mySide(p.id) === "client";
   h += '<div><div class="section-h">Client Inputs ' + tbd("In scope? OPEN C6") + '</div><div class="card">' + tl.inputs.map(x =>
-    '<div class="kv"><span>' + esc(x.name) + '</span><span class="pill ' + (x.status === "received" ? "solid" : "dash") + '">' + (x.status === "received" ? ic("check") : "") + esc(L.input[x.status]) + "</span></div>").join("") +
+    '<div class="kv"><span>' + esc(x.name) + '</span><span class="pill ' + (x.status === "received" ? "solid" : "miss") + '">' + (x.status === "received" ? ic("check") : "") + esc(L.input[x.status]) + "</span></div>").join("") +
     (clientSide ? '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="openInputs()" ' + (tl.inputs.some(x => x.status === "missing") ? "" : "disabled") + ">" + ic("upload") + "Upload inputs</button>" : '<p class="sub" style="font-size:12px;margin-top:8px">The client uploads missing inputs.</p>') + "</div>";
   h += '<div class="section-h">Feedback rule ' + tbd("Static or per project: OPEN C6 (OQ-6)") + '</div><div class="card" style="font-size:13px;line-height:1.6">Consolidated feedback within 2 working days per round.<br>Late feedback shifts delivery.<br><b>Final approver: Client</b></div></div></div>';
   sec("timeline").innerHTML = h;
